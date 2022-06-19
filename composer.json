@@ -1,0 +1,64 @@
+{
+    "name": "jhavens/iterative-eloquent-models",
+    "description": "provides a simple way to iterate over eloquent model instances",
+    "keywords": [
+        "jhavens",
+        "laravel",
+        "iterative-eloquent-models"
+    ],
+    "homepage": "https://github.com/jhavens/iterative-eloquent-models",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Jonathan Havens",
+            "email": "mail@jhavens.tech",
+            "role": "Developer"
+        }
+    ],
+    "require": {
+        "php": "^8.1",
+        "illuminate/contracts": "^9.0",
+        "innmind/immutable": "^4.2",
+        "pyrsmk/php-class": "^1.0",
+        "spatie/laravel-package-tools": "^1.9.2"
+    },
+    "require-dev": {
+        "nunomaduro/collision": "^6.0",
+        "orchestra/testbench": "^7.0",
+        "pestphp/pest": "^1.21",
+        "pestphp/pest-plugin-laravel": "^1.1",
+        "phpunit/phpunit": "^9.5",
+        "spatie/laravel-ray": "^1.26"
+    },
+    "autoload": {
+        "psr-4": {
+            "Jhavens\\IterativeEloquentModels\\": "src"
+        },
+        "files": [
+            "src/helpers.php"
+        ]
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Jhavens\\IterativeEloquentModels\\Tests\\": "tests"
+        }
+    },
+    "scripts": {
+        "test-coverage": "vendor/bin/pest --coverage"
+    },
+    "config": {
+        "sort-packages": true,
+        "allow-plugins": {
+            "pestphp/pest-plugin": true
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Jhavens\\IterativeEloquentModels\\IterativeEloquentModelsServiceProvider"
+            ]
+        }
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true
+}
