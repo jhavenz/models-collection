@@ -8,6 +8,7 @@ use Jhavenz\ModelsCollection\Tests\Fixtures\Models\Post;
 use Jhavenz\ModelsCollection\Tests\Fixtures\Models\Role;
 
 beforeEach(fn () => ModelsCollection::flush());
+afterEach(fn () => ModelsCollection::flush());
 
 it('can have a model class string filter', function () {
     Repository::only(Post::class);
