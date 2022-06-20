@@ -16,8 +16,11 @@ php artisan vendor:publish --tag="models-collection-config"
 
 This is the contents of the published config file:
 
+**Optional**
+can use `config('app.models_path')` if you'd rather not publish this little config file
 ```php
 return [
+    'models_path' => app_path('Models')
 ];
 ```
 
