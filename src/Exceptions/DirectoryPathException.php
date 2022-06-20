@@ -1,6 +1,6 @@
 <?php
 
-namespace Jhavens\IterativeEloquentModels\Exceptions;
+namespace Jhavenz\ModelsCollection\Exceptions;
 
 use RuntimeException;
 
@@ -16,7 +16,7 @@ class DirectoryPathException extends RuntimeException
     public static function noDefault(): static
     {
         return new static(
-            "No default Models directory could be found. If not using a conventional Models directory, call \Jhavens\IterativeEloquentModels\IterativeEloquentModels::usingModelsDirectory() to set a custom one"
+            "No default Models directory could be found. If not using a conventional Models directory, call \Jhavenz\ModelsCollection\IterativeEloquentModels::usingModelsDirectory() to set a custom one"
         );
     }
 }

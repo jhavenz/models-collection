@@ -1,16 +1,16 @@
 <?php
 
 use Illuminate\Database\Eloquent\Model;
-use Jhavens\IterativeEloquentModels\IterativeEloquentModels;
-use Jhavens\IterativeEloquentModels\ModelsCollection;
-use Jhavens\IterativeEloquentModels\Structs\Filesystem\FilePath;
-use Jhavens\IterativeEloquentModels\Tests\Fixtures\Models\Post;
-use Jhavens\IterativeEloquentModels\Tests\Fixtures\Models\Role;
+use Jhavenz\ModelsCollection\ModelsCollection;
+use Jhavenz\ModelsCollection\Repository;
+use Jhavenz\ModelsCollection\Structs\Filesystem\FilePath;
+use Jhavenz\ModelsCollection\Tests\Fixtures\Models\Post;
+use Jhavenz\ModelsCollection\Tests\Fixtures\Models\Role;
 
 beforeEach(fn () => ModelsCollection::flush());
 
 it('can have a model class string filter', function () {
-    IterativeEloquentModels::only(Post::class);
+    Repository::only(Post::class);
 
     expect($models = ModelsCollection::create()->toArray())->toHaveCount(1)
         ->and($file = $models[0])->toBeInstanceOf(FilePath::class)
@@ -18,7 +18,7 @@ it('can have a model class string filter', function () {
 });
 
 it('can have a model file string filter', function () {
-    IterativeEloquentModels::only(FilePath::fromClassString(Post::class));
+    Repository::only(FilePath::fromClassString(Post::class));
 
     expect($models = ModelsCollection::create()->toArray())->toHaveCount(1)
         ->and($file = $models[0])->toBeInstanceOf(FilePath::class)
@@ -26,7 +26,7 @@ it('can have a model file string filter', function () {
 });
 
 it('can have multiple model class string filters', function () {
-    IterativeEloquentModels::only(Post::class, Role::class);
+    Repository::only(Post::class, Role::class);
 
     $models = ModelsCollection::create()->toArray();
 
@@ -36,7 +36,7 @@ it('can have multiple model class string filters', function () {
 });
 
 it('can have multiple model file string filters', function () {
-    IterativeEloquentModels::only(
+    Repository::only(
         FilePath::factory(Post::class),
         FilePath::factory(Role::class)
     );
@@ -47,7 +47,6 @@ it('can have multiple model file string filters', function () {
 });
 
 it('has all models when no filters are given', function () {
-
     $models = ModelsCollection::toBase();
 
     expect($models)
@@ -56,7 +55,7 @@ it('has all models when no filters are given', function () {
 });
 
 it('can have one model when filter is given', function () {
-    IterativeEloquentModels::only(
+    Repository::only(
         FilePath::factory(Post::class),
     );
 

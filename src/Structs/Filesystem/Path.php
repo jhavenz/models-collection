@@ -1,10 +1,10 @@
 <?php
 
-namespace Jhavens\IterativeEloquentModels\Structs\Filesystem;
+namespace Jhavenz\ModelsCollection\Structs\Filesystem;
 
 use Illuminate\Database\Eloquent\Model;
 use InvalidArgumentException;
-use Jhavens\IterativeEloquentModels\IterativeEloquentModels;
+use Jhavenz\ModelsCollection\Repository;
 use JsonSerializable;
 use SplFileInfo;
 use Stringable;
@@ -80,9 +80,9 @@ abstract class Path implements Stringable, JsonSerializable
                 ->ignoreDotFiles(true),
             function (Finder $finder) use ($directoriesOnly, $filesOnly) {
                 foreach ([
-                    fn ($f) => filled($depth = IterativeEloquentModels::depth()) && $f->depth($depth),
-                    fn ($f) => $filesOnly && $f->files(),
-                    fn ($f) => $directoriesOnly && $f->directories()
+					fn ($f) => filled($depth = Repository::depth()) && $f->depth($depth),
+					fn ($f) => $filesOnly && $f->files(),
+					fn ($f) => $directoriesOnly && $f->directories()
                 ] as $configuration) {
                     $configuration($finder);
                 }
@@ -96,7 +96,7 @@ abstract class Path implements Stringable, JsonSerializable
         $maxDepth = PHP_INT_MAX;
 
         $depths = [];
-        foreach ((array) IterativeEloquentModels::depth() as $d) {
+        foreach ((array) Repository::depth() as $d) {
             $depths[] = new SymfonyComparator\NumberComparator($d);
         }
 

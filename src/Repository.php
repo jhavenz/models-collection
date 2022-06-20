@@ -1,15 +1,15 @@
 <?php declare(strict_types=1);
 
-namespace Jhavens\IterativeEloquentModels;
+namespace Jhavenz\ModelsCollection;
 
 use Innmind\Immutable\Set;
-use Jhavens\IterativeEloquentModels\Exceptions\DirectoryPathException;
-use Jhavens\IterativeEloquentModels\Structs\Filesystem\DirectoryPath;
-use Jhavens\IterativeEloquentModels\Structs\Filesystem\FilePath;
-use Jhavens\IterativeEloquentModels\Structs\Filesystem\Path;
+use Jhavenz\ModelsCollection\Exceptions\DirectoryPathException;
+use Jhavenz\ModelsCollection\Structs\Filesystem\DirectoryPath;
+use Jhavenz\ModelsCollection\Structs\Filesystem\FilePath;
+use Jhavenz\ModelsCollection\Structs\Filesystem\Path;
 use Symfony\Component\Finder\Finder;
 
-class IterativeEloquentModels
+class Repository
 {
     private static Set $directories;
     private static string|int|array $depth;
@@ -30,11 +30,11 @@ class IterativeEloquentModels
     /** @return Set<DirectoryPath> */
     public static function directories(): Set
     {
-        if (empty(self::$directories)) {
-            self::$directories = Set::strings(self::getDefaultDirectory());
+        if (! empty(self::$directories) && filled(array_filter(self::$directories->toList()))) {
+            return self::$directories->filter(fn ($path) => filled($path));
         }
 
-        return self::$directories->filter(fn ($path) => filled($path));
+        return self::$directories = Set::strings(self::getDefaultDirectory());
     }
 
     /** {@see Finder::depth()} */

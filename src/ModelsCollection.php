@@ -1,6 +1,6 @@
 <?php
 
-namespace Jhavens\IterativeEloquentModels;
+namespace Jhavenz\ModelsCollection;
 
 use ArrayIterator;
 use Closure;
@@ -14,10 +14,10 @@ use Illuminate\Support\Traits\Conditionable;
 use Illuminate\Support\Traits\ForwardsCalls;
 use Innmind\Immutable\Set;
 use IteratorAggregate;
-use Jhavens\IterativeEloquentModels\Iterator\ModelIterator;
-use Jhavens\IterativeEloquentModels\Structs\Filesystem\DirectoryPath;
-use Jhavens\IterativeEloquentModels\Structs\Filesystem\FilePath;
-use Jhavens\IterativeEloquentModels\Structs\Filesystem\Path;
+use Jhavenz\ModelsCollection\Iterator\ModelIterator;
+use Jhavenz\ModelsCollection\Structs\Filesystem\DirectoryPath;
+use Jhavenz\ModelsCollection\Structs\Filesystem\FilePath;
+use Jhavenz\ModelsCollection\Structs\Filesystem\Path;
 use OutOfBoundsException;
 use SplFileInfo;
 use Symfony\Component\Finder\Finder;
@@ -68,7 +68,7 @@ class ModelsCollection implements IteratorAggregate, Arrayable, \Countable
 
     public static function flush(): void
     {
-        IterativeEloquentModels::flush();
+        Repository::flush();
         self::$filters = [];
         self::$iterator = null;
         unset(app()[ModelsCollection::class]);
@@ -84,7 +84,7 @@ class ModelsCollection implements IteratorAggregate, Arrayable, \Countable
     /** @return Set<DirectoryPath> */
     public function getDirectories(): Set
     {
-        return IterativeEloquentModels::directories();
+        return Repository::directories();
     }
 
     private function getDirectoryFinders(): Set
@@ -164,9 +164,9 @@ class ModelsCollection implements IteratorAggregate, Arrayable, \Countable
 
     public function toArray(): array
     {
-        return isset($this->items) && count($this->items)
-            ? $this->items
-            : array_values(iterator_to_array($this->getIterator()));
+        return empty($this->items)
+            ? array_values(iterator_to_array($this->getIterator()))
+            : $this->items;
     }
 
     /** @noinspection PhpIncompatibleReturnTypeInspection */

@@ -1,11 +1,11 @@
 <?php
 
-namespace Jhavens\IterativeEloquentModels;
+namespace Jhavenz\ModelsCollection;
 
 use Spatie\LaravelPackageTools\Package;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
 
-class IterativeEloquentModelsServiceProvider extends PackageServiceProvider
+class ModelsCollectionServiceProvider extends PackageServiceProvider
 {
     public function configurePackage(Package $package): void
     {

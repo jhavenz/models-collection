@@ -1,14 +1,14 @@
 <?php
 
-namespace Jhavens\IterativeEloquentModels\Iterator;
+namespace Jhavenz\ModelsCollection\Iterator;
 
 use FilterIterator;
 use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Database\Eloquent\Model;
 use Innmind\Immutable\Set;
 use Iterator;
-use Jhavens\IterativeEloquentModels\Structs\Filesystem\FilePath;
-use function Jhavens\rescueQuietly;
+use Jhavenz\ModelsCollection\Structs\Filesystem\FilePath;
+use function Jhavenz\rescueQuietly;
 
 /**
  * @template T of <array-key, FilePath>

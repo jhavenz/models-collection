@@ -27,7 +27,7 @@ return [
 ## Usage
 
 ```php
-use Jhavens\IterativeEloquentModels\ModelsCollection;
+use Jhavenz\ModelsCollection\ModelsCollection;
 
 $totals = [];
 
@@ -75,7 +75,7 @@ Please email me at mail@jhavens.tech if if/when any vulnerabilities are found
 
 ## Credits
 
-- [Jonathan Havens](https://github.com/jhavens)
+- [Jonathan Havens](https://github.com/jhavenz)
 
 ## License
 

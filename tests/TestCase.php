@@ -1,8 +1,8 @@
 <?php
 
-namespace Jhavens\IterativeEloquentModels\Tests;
+namespace Jhavenz\ModelsCollection\Tests;
 
-use Jhavens\IterativeEloquentModels\IterativeEloquentModelsServiceProvider;
+use Jhavenz\ModelsCollection\ModelsCollectionServiceProvider;
 use Orchestra\Testbench\TestCase as Orchestra;
 use Spatie\LaravelRay\RayServiceProvider;
 
@@ -12,8 +12,8 @@ class TestCase extends Orchestra
     protected function getPackageProviders($app): array
     {
         return [
-            RayServiceProvider::class,
-            IterativeEloquentModelsServiceProvider::class,
+			RayServiceProvider::class,
+			ModelsCollectionServiceProvider::class,
         ];
     }
 

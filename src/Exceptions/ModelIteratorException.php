@@ -1,6 +1,6 @@
 <?php
 
-namespace Jhavens\IterativeEloquentModels\Exceptions;
+namespace Jhavenz\ModelsCollection\Exceptions;
 
 use League\Flysystem\SymbolicLinkEncountered;
 use RuntimeException;

@@ -1,12 +1,12 @@
 <?php
 
-namespace Jhavens\IterativeEloquentModels\Tests\Fixtures\Models;
+namespace Jhavenz\ModelsCollection\Tests\Fixtures\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
-use Jhavens\IterativeEloquentModels\Tests\Fixtures\Models\Pivot\RoleUser;
+use Jhavenz\ModelsCollection\Tests\Fixtures\Models\Pivot\RoleUser;
 
 class Role extends Model implements IHasMigrations
 {

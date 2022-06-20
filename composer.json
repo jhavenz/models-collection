@@ -1,5 +1,5 @@
 {
-    "name": "jhavens/models-collection",
+    "name": "jhavenz/models-collection",
     "description": "a simple way to collect/iterate over the eloquent models in a project",
     "keywords": [
         "jhavenz",
@@ -8,7 +8,7 @@
         "models-collection",
         "eloquent collection"
     ],
-    "homepage": "https://github.com/jhavens/models-collection",
+    "homepage": "https://github.com/jhavenz/models-collection",
     "license": "MIT",
     "authors": [
         {
@@ -34,7 +34,7 @@
     },
     "autoload": {
         "psr-4": {
-            "Jhavens\\IterativeEloquentModels\\": "src"
+            "Jhavenz\\ModelsCollection\\": "src"
         },
         "files": [
             "src/helpers.php"
@@ -42,7 +42,7 @@
     },
     "autoload-dev": {
         "psr-4": {
-            "Jhavens\\IterativeEloquentModels\\Tests\\": "tests"
+            "Jhavenz\\ModelsCollection\\Tests\\": "tests"
         }
     },
     "scripts": {
@@ -57,7 +57,7 @@
     "extra": {
         "laravel": {
             "providers": [
-                "Jhavens\\IterativeEloquentModels\\IterativeEloquentModelsServiceProvider"
+                "Jhavenz\\ModelsCollection\\ModelsCollectionServiceProvider"
             ]
         }
     },

@@ -1,9 +1,9 @@
 <?php
 
-namespace Jhavens\IterativeEloquentModels\Structs\Filesystem;
+namespace Jhavenz\ModelsCollection\Structs\Filesystem;
 
-use Jhavens\IterativeEloquentModels\Exceptions\FilePathException;
-use Jhavens\IterativeEloquentModels\Exceptions\ModelIteratorException;
+use Jhavenz\ModelsCollection\Exceptions\FilePathException;
+use Jhavenz\ModelsCollection\Exceptions\ModelIteratorException;
 use PhpClass\PhpClass;
 use ReflectionClass;
 

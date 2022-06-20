@@ -1,12 +1,12 @@
 <?php
 
-namespace Jhavens;
+namespace Jhavenz;
 
 
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
-use Jhavens\IterativeEloquentModels\ModelsCollection;
+use Jhavenz\ModelsCollection\ModelsCollection;
 
 if (! function_exists('rescueQuietly')) {
     /** no reporting if/when an exception is thrown */
@@ -19,7 +19,7 @@ if (! function_exists('rescueQuietly')) {
 if (! function_exists('toIterable')) {
     /**
      * @noinspection PhpDocSignatureInspection
-     * 
+     *
      * @template TValue
      *
      * @param TValue $value

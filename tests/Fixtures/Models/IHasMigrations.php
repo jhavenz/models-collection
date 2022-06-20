@@ -1,6 +1,6 @@
 <?php
 
-namespace Jhavens\IterativeEloquentModels\Tests\Fixtures\Models;
+namespace Jhavenz\ModelsCollection\Tests\Fixtures\Models;
 
 interface IHasMigrations
 {

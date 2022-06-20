@@ -1,14 +1,14 @@
 <?php
 
-namespace Jhavens\IterativeEloquentModels\Tests\Fixtures\Models\Pivot;
+namespace Jhavenz\ModelsCollection\Tests\Fixtures\Models\Pivot;
 
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\Pivot;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
-use Jhavens\IterativeEloquentModels\Tests\Fixtures\Models\IHasMigrations;
-use Jhavens\IterativeEloquentModels\Tests\Fixtures\Models\Role;
-use Jhavens\IterativeEloquentModels\Tests\Fixtures\Models\User;
+use Jhavenz\ModelsCollection\Tests\Fixtures\Models\IHasMigrations;
+use Jhavenz\ModelsCollection\Tests\Fixtures\Models\Role;
+use Jhavenz\ModelsCollection\Tests\Fixtures\Models\User;
 
 class RoleUser extends Pivot implements IHasMigrations
 {

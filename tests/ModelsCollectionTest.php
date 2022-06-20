@@ -2,19 +2,18 @@
 
 /** @noinspection PhpVoidFunctionResultUsedInspection */
 
-use Jhavens\IterativeEloquentModels\IterativeEloquentModels;
-use Jhavens\IterativeEloquentModels\ModelsCollection;
-use Jhavens\IterativeEloquentModels\Structs\Filesystem\DirectoryPath;
-use Jhavens\IterativeEloquentModels\Structs\Filesystem\FilePath;
-use Jhavens\IterativeEloquentModels\Tests\Fixtures\Models\Pivot\RoleUser;
-use Jhavens\IterativeEloquentModels\Tests\Fixtures\Models\Post;
-use Jhavens\IterativeEloquentModels\Tests\Fixtures\Models\Role;
-use Jhavens\IterativeEloquentModels\Tests\Fixtures\Models\User;
+use Jhavenz\ModelsCollection\ModelsCollection;
+use Jhavenz\ModelsCollection\Repository;
+use Jhavenz\ModelsCollection\Structs\Filesystem\DirectoryPath;
+use Jhavenz\ModelsCollection\Structs\Filesystem\FilePath;
+use Jhavenz\ModelsCollection\Tests\Fixtures\Models\Pivot\RoleUser;
+use Jhavenz\ModelsCollection\Tests\Fixtures\Models\Post;
+use Jhavenz\ModelsCollection\Tests\Fixtures\Models\Role;
+use Jhavenz\ModelsCollection\Tests\Fixtures\Models\User;
 
 afterEach(fn () => ModelsCollection::flush());
 
 
-// TODO - Fix overlap between tests
 it('isnt empty when not explicitly given a models directory', function () {
     expect($models = ModelsCollection::create()->toArray())
         ->not
@@ -24,7 +23,7 @@ it('isnt empty when not explicitly given a models directory', function () {
 });
 
 it('has all models when given a directory', function () {
-    IterativeEloquentModels::usingDirectories(DirectoryPath::from(__DIR__.'/Fixtures/Models'));
+    Repository::usingDirectories(DirectoryPath::from(__DIR__.'/Fixtures/Models'));
 
     expect(ModelsCollection::create())
         ->toHaveCount(4)
@@ -38,7 +37,7 @@ it('has all models when given a directory', function () {
 });
 
 it('acknowledges depth', function () {
-    IterativeEloquentModels::usingDepth('== 0');
+    Repository::usingDepth('== 0');
 
     $models = ModelsCollection::create();
 
@@ -67,7 +66,7 @@ it('forwards static method calls to the underlying collection', function () {
 });
 
 it('can have some models when filters are given', function () {
-    IterativeEloquentModels::only(
+    Repository::only(
         FilePath::factory(Post::class),
         FilePath::factory(User::class)
     );

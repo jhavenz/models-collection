@@ -1,9 +1,9 @@
 <?php
 
-namespace Jhavens\IterativeEloquentModels\Structs\Filesystem;
+namespace Jhavenz\ModelsCollection\Structs\Filesystem;
 
-use Jhavens\IterativeEloquentModels\Exceptions\DirectoryPathException;
-use Jhavens\IterativeEloquentModels\Exceptions\ModelIteratorException;
+use Jhavenz\ModelsCollection\Exceptions\DirectoryPathException;
+use Jhavenz\ModelsCollection\Exceptions\ModelIteratorException;
 
 class DirectoryPath extends Path
 {
