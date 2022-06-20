@@ -4,7 +4,6 @@ namespace Jhavens\IterativeEloquentModels;
 
 use Innmind\Immutable\Set;
 use Jhavens\IterativeEloquentModels\Exceptions\DirectoryPathException;
-use Jhavens\IterativeEloquentModels\Iterator\Models;
 use Jhavens\IterativeEloquentModels\Structs\Filesystem\DirectoryPath;
 use Jhavens\IterativeEloquentModels\Structs\Filesystem\FilePath;
 use Jhavens\IterativeEloquentModels\Structs\Filesystem\Path;
@@ -12,36 +11,37 @@ use Symfony\Component\Finder\Finder;
 
 class IterativeEloquentModels
 {
-    private static string|int|array $depth = [];
     private static Set $directories;
+    private static string|int|array $depth;
 
     public function __construct()
     {
-        if (app()->bound($class = Models::class)) {
+        if (app()->bound($class = ModelsCollection::class)) {
             app()->forgetInstance($class);
         }
     }
 
     public static function depth(): string|int|array
     {
-        return self::$depth;
+        // infinite depth by default
+        return self::$depth ?? ['>= 0'];
     }
 
     /** @return Set<DirectoryPath> */
     public static function directories(): Set
     {
+        if (empty(self::$directories)) {
+            self::$directories = Set::strings(self::getDefaultDirectory());
+        }
+
+        return self::$directories->filter(fn ($path) => filled($path));
         return match (TRUE) {
-            filled(self::$directories ?? null) => self::$directories->filter(fn ($path) => filled($path)),
-            app()->resolved(Models::class) => Models::make()->getDirectories(),
-            default => Set::strings(self::usingModelsDirectory()::getDefaultDirectory()),
+            empty(self::$directories) => self::usingDirectories(self::getDefaultDirectory()),
+            //app()->resolved(Models::class) => Models::make()->getDirectories(),
+            default => self::$directories->filter(fn ($path) => filled($path)),
+            //filled(self::$directories ?? null) => self::$directories->filter(fn ($path) => filled($path)),
+            //default => Set::strings(self::usingModelsDirectory()::getDefaultDirectory()),
         };
-    }
-
-    public static function usingModelsDirectory(null|string|DirectoryPath $path = null): static
-    {
-        static::addDirectory($path ?? self::getDefaultDirectory());
-
-        return new static;
     }
 
     /** {@see Finder::depth()} */
@@ -54,12 +54,12 @@ class IterativeEloquentModels
 
     public static function usingDirectories(string|Path ...$directories): static
     {
-        if (empty(self::$directories)) {
-            self::$directories = Set::of(null);
-        }
+        //if (! empty(self::$directories)) {
+        //    self::$directories = Set::of(null);
+        //}
 
         foreach ($directories as $directory) {
-            self::$directories = self::directories()->add(DirectoryPath::factory($directory));
+            self::$directories = self::directories()->add(DirectoryPath::factory($directory)->directoryPath());
         }
 
         return new self;
@@ -68,10 +68,10 @@ class IterativeEloquentModels
     public static function only(FilePath|string ...$filters): static
     {
         $paths = array_map(function (string|FilePath $path) {
-            return tap(FilePath::factory($path), fn ($p) => self::addDirectory($p));
+            return tap(FilePath::factory($path), fn ($p) => self::usingDirectories($p));
         }, $filters);
 
-        Models::make()->addFilter(function (FilePath $path) use (&$paths) {
+        ModelsCollection::make()->addFilter(function (FilePath $path) use (&$paths) {
             /** @var FilePath $p */
             foreach ($paths as $p) {
                  if ($path->classString() === $p->classString()) {
@@ -85,36 +85,14 @@ class IterativeEloquentModels
         return new static;
     }
 
-    /**
-     * @param Path|string $item
-     */
-    private static function addDirectory(Path|string $item): void
-    {
-        $path = Path::factory($item)->directoryPath();
-
-        if (isset(self::$directories)
-            && self::$directories->contains($path)) {
-            return;
-        }
-
-        static::usingDirectories($path);
-    }
-
     private static function getDefaultDirectory(): string
     {
         return match (TRUE) {
+            config()->has($appConfigPath = 'app.models_path') => config($appConfigPath),
+            config()->has($pkgConfigPath = 'iterative-eloquent-models.models_path') => config($pkgConfigPath),
             is_dir($modelsPath = app_path('Models')) => $modelsPath,
             is_dir($appPath = app_path()) => $appPath,
             default => throw DirectoryPathException::noDefault()
         };
-    }
-
-    public static function setDefaultDirectory(?string $path = null): void
-    {
-        if (! empty(self::$directories)) {
-           return;
-        }
-
-        self::addDirectory($path ?? self::getDefaultDirectory());
     }
 }

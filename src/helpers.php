@@ -1,6 +1,6 @@
 <?php
 
-namespace Jhavens;
+namespace "Jh-83\\Iter";
 
 
 /** no reporting if/when an exception is thrown */

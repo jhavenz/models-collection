@@ -2,7 +2,6 @@
 
 namespace Jhavens\IterativeEloquentModels;
 
-use Jhavens\IterativeEloquentModels\Iterator\Models;
 use Spatie\LaravelPackageTools\Package;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
 
@@ -17,6 +16,6 @@ class IterativeEloquentModelsServiceProvider extends PackageServiceProvider
 
     public function registeringPackage()
     {
-        $this->app->singleton(Models::class);
+        $this->app->singleton(ModelsCollection::class);
     }
 }

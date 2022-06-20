@@ -8,8 +8,10 @@ use Jhavens\IterativeEloquentModels\IterativeEloquentModels;
 use JsonSerializable;
 use SplFileInfo;
 use Stringable;
+use Symfony\Component\Finder\Comparator as SymfonyComparator;
 use Symfony\Component\Finder\Finder;
 use Symfony\Component\Finder\SplFileInfo as SymfonyFileInfo;
+use const PHP_INT_MAX;
 
 abstract class Path implements Stringable, JsonSerializable
 {
@@ -28,28 +30,7 @@ abstract class Path implements Stringable, JsonSerializable
     /** @return Finder<SymfonyFileInfo> */
     public function fileFinder(): Finder
     {
-        $finder = Finder::create()
-            ->in($this->path())
-            ->ignoreVCS(true)
-            ->ignoreDotFiles(true);
-            //->filter(function (SymfonyFileInfo $fileInfo) {
-            //    return ! $fileInfo->isDir();
-            //});
-
-        if (filled($depth = IterativeEloquentModels::depth())) {
-            $finder->depth($depth);
-        }
-
-        /** @var SymfonyFileInfo $fileInfo */
-        foreach ($finder as $fileInfo) {
-            if ($fileInfo->isDir()) {
-                $finder = clone $finder->path($fileInfo->getRealPath());
-            }
-        }
-
-
-
-        return $finder;
+        return $this->makeFinderForPath($this->path(), filesOnly: true);
     }
 
     public static function from(mixed $path): static
@@ -84,5 +65,62 @@ abstract class Path implements Stringable, JsonSerializable
     public function jsonSerialize()
     {
         return (string) $this;
+    }
+
+    public function makeFinderForPath(string $path, bool $filesOnly = false, bool $directoriesOnly = false): Finder
+    {
+        if ($filesOnly && is_file($path)) {
+            $path = dirname($path);
+        }
+
+        return tap(
+            Finder::create()
+                ->in($path)
+                ->ignoreVCS(true)
+                ->ignoreDotFiles(true),
+            function (Finder $finder) use ($directoriesOnly, $filesOnly) {
+                foreach ([
+                    fn ($f) => filled($depth = IterativeEloquentModels::depth()) && $f->depth($depth),
+                    fn ($f) => $filesOnly && $f->files(),
+                    fn ($f) => $directoriesOnly && $f->directories()
+                ] as $configuration) {
+                    $configuration($finder);
+                }
+            }
+        );
+    }
+
+    private function getMinMaxDepth(): array
+    {
+        $minDepth = 0;
+        $maxDepth = PHP_INT_MAX;
+
+        $depths = [];
+        foreach ((array) IterativeEloquentModels::depth() as $d) {
+            $depths[] = new SymfonyComparator\NumberComparator($d);
+        }
+
+        /** @var SymfonyComparator\NumberComparator $comparator */
+        foreach ($depths as $comparator) {
+            switch ($comparator->getOperator()) {
+                case '>':
+                    /** @noinspection PhpWrongStringConcatenationInspection */
+                    $minDepth = $comparator->getTarget() + 1;
+                    break;
+                case '>=':
+                    $minDepth = $comparator->getTarget();
+                    break;
+                case '<':
+                    $maxDepth = $comparator->getTarget() - 1;
+                    break;
+                case '<=':
+                    $maxDepth = $comparator->getTarget();
+                    break;
+                default:
+                    $minDepth = $maxDepth = $comparator->getTarget();
+            }
+        }
+
+        return [$minDepth, $maxDepth];
     }
 }

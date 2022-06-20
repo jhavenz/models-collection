@@ -24,12 +24,12 @@ return [
 ## Usage
 
 ```php
-use Jhavens\IterativeEloquentModels\Iterator\Models;
+use Jhavens\IterativeEloquentModels\ModelsCollection;
 
 $totals = [];
 
 /** @var \Illuminate\Database\Eloquent\Model $model */
-foreach (Models::make() as $model) {
+foreach (ModelsCollection::make() as $model) {
     $totals[$model->getTable()] = $model->newQuery()->count();
 }
 
@@ -44,7 +44,7 @@ dump($totals);
 
 // or
 
-Models::toCollection()->map->getTable();
+ModelsCollection::toCollection()->map->getTable();
 
 dump($totals);
 /**

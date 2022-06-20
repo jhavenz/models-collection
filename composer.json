@@ -32,7 +32,8 @@
     },
     "autoload": {
         "psr-4": {
-            "Jhavens\\IterativeEloquentModels\\": "src"
+            "Jhavens\\IterativeEloquentModels\\": "src",
+            "Jh-83\\IterativeEloquentModels\\": "src/helpers.php"
         },
         "files": [
             "src/helpers.php"

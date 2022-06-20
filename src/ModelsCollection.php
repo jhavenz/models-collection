@@ -1,6 +1,6 @@
 <?php
 
-namespace Jhavens\IterativeEloquentModels\Iterator;
+namespace Jhavens\IterativeEloquentModels;
 
 use ArrayIterator;
 use Closure;
@@ -8,31 +8,36 @@ use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Enumerable;
 use Illuminate\Support\Traits\Conditionable;
+use Illuminate\Support\Traits\ForwardsCalls;
 use Innmind\Immutable\Set;
 use IteratorAggregate;
-use Jhavens\IterativeEloquentModels\IterativeEloquentModels;
+use Jhavens\IterativeEloquentModels\Iterator\ModelIterator;
 use Jhavens\IterativeEloquentModels\Structs\Filesystem\DirectoryPath;
 use Jhavens\IterativeEloquentModels\Structs\Filesystem\FilePath;
 use SplFileInfo;
 use Symfony\Component\Finder\Finder;
 use Symfony\Component\Finder\SplFileInfo as SymfonyFileInfo;
+use function app;
+use function collect;
 
-class Models implements IteratorAggregate, Arrayable, \Countable
+/**
+ * @implements Enumerable
+ * @mixin Collection
+ */
+class ModelsCollection implements IteratorAggregate, Arrayable, \Countable
 {
-    use Conditionable;
+    use Conditionable
+        , ForwardsCalls;
 
+    private Set $files;
     private Set $directories;
     private static array $filters = [];
     private static ?ModelIterator $iterator;
 
     /** enforce singleton */
-    private function __construct()
-    {
-        IterativeEloquentModels::setDefaultDirectory(
-            config('app.models_path', config('iterative-eloquent-models.models_path'))
-        );
-    }
+    private function __construct() {}
 
     public function addFilter(Closure $filter): static
     {
@@ -62,7 +67,7 @@ class Models implements IteratorAggregate, Arrayable, \Countable
     {
         self::$filters = [];
         self::$iterator = null;
-        app()->forgetIinstance(Models::class);
+        app()->forgetInstance(ModelsCollection::class);
 
         return static::make();
     }
@@ -77,18 +82,19 @@ class Models implements IteratorAggregate, Arrayable, \Countable
     /** @return Set<DirectoryPath> */
     public function getDirectories(): Set
     {
-        return $this->directories ??= IterativeEloquentModels::directories();
+        return IterativeEloquentModels::directories();
     }
 
     private function getDirectoryFinders(): Set
     {
-        return $this->getDirectories()->map(fn (string|DirectoryPath $path) => DirectoryPath::factory($path)->fileFinder());
+        return $this->getDirectories()->map(fn (string $path) => DirectoryPath::factory($path)->fileFinder());
     }
 
     private function getFilePaths(Finder $finder): array
     {
         return collect($finder)
-            ->map(fn (SymfonyFileInfo $fileInfo) => FilePath::from($fileInfo->getRealPath()))
+            ->map(fn (SymfonyFileInfo $fileInfo) => $fileInfo->isFile() ? FilePath::from($fileInfo->getRealPath()) : null)
+            ->filter()
             ->all();
     }
 
@@ -123,15 +129,34 @@ class Models implements IteratorAggregate, Arrayable, \Countable
 
     public static function make(): static
     {
-        if (app()->resolved(Models::class)) {
-            return app(Models::class);
+        if (app()->resolved(ModelsCollection::class)) {
+            return app(ModelsCollection::class);
         }
 
-        return app()->instance(Models::class, new static);
+        return app()->instance(ModelsCollection::class, new static);
     }
 
     public function toArray(): array
     {
-        return array_values($this->getIterator()->toArray());
+        return array_values(iterator_to_array($this->getIterator()));
+    }
+
+    public function __get(string $name)
+    {
+        return static::toCollection()->$name;
+    }
+
+    public function __call(string $method, array $parameters)
+    {
+        return $this->forwardDecoratedCallTo(self::toCollection(), $method, $parameters);
+    }
+
+    public static function __callStatic(string $method, array $parameters)
+    {
+        if (! method_exists($collection = self::toCollection(), $method)) {
+            self::throwBadMethodCallException($method);
+        }
+
+        return $collection->$method(...$parameters);
     }
 }
