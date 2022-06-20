@@ -2,9 +2,11 @@
     "name": "jhavens/models-collection",
     "description": "a simple way to collect/iterate over the eloquent models in a project",
     "keywords": [
-        "jhavens",
+        "jhavenz",
         "laravel",
-        "iterative-eloquent-models"
+        "laravel packages",
+        "models-collection",
+        "eloquent collection"
     ],
     "homepage": "https://github.com/jhavens/models-collection",
     "license": "MIT",

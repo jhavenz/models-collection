@@ -24,7 +24,7 @@ class IterativeEloquentModels
     public static function depth(): string|int|array
     {
         // infinite depth by default
-        return self::$depth ?? ['>= 0'];
+        return self::$depth ?? [];
     }
 
     /** @return Set<DirectoryPath> */
@@ -35,13 +35,6 @@ class IterativeEloquentModels
         }
 
         return self::$directories->filter(fn ($path) => filled($path));
-        return match (TRUE) {
-            empty(self::$directories) => self::usingDirectories(self::getDefaultDirectory()),
-            //app()->resolved(Models::class) => Models::make()->getDirectories(),
-            default => self::$directories->filter(fn ($path) => filled($path)),
-            //filled(self::$directories ?? null) => self::$directories->filter(fn ($path) => filled($path)),
-            //default => Set::strings(self::usingModelsDirectory()::getDefaultDirectory()),
-        };
     }
 
     /** {@see Finder::depth()} */
@@ -54,10 +47,6 @@ class IterativeEloquentModels
 
     public static function usingDirectories(string|Path ...$directories): static
     {
-        //if (! empty(self::$directories)) {
-        //    self::$directories = Set::of(null);
-        //}
-
         foreach ($directories as $directory) {
             self::$directories = self::directories()->add(DirectoryPath::factory($directory)->directoryPath());
         }
@@ -89,10 +78,16 @@ class IterativeEloquentModels
     {
         return match (TRUE) {
             config()->has($appConfigPath = 'app.models_path') => config($appConfigPath),
-            config()->has($pkgConfigPath = 'iterative-eloquent-models.models_path') => config($pkgConfigPath),
+            config()->has($pkgConfigPath = 'models-collection.models_path') => config($pkgConfigPath),
             is_dir($modelsPath = app_path('Models')) => $modelsPath,
             is_dir($appPath = app_path()) => $appPath,
             default => throw DirectoryPathException::noDefault()
         };
+    }
+
+    public static function flush()
+    {
+        self::$directories = Set::of(null);
+        self::$depth = [];
     }
 }

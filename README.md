@@ -1,17 +1,17 @@
-# provides a simple way to iterate over eloquent model instances
+# A simple way to collect/iterate over the eloquent models in a project
 
 ## Installation
 
 You can install the package via composer:
 
 ```bash
-composer require jhavens/iterative-eloquent-models
+composer require jhavenz/models-collection
 ```
 
 You can publish the config file with:
 
 ```bash
-php artisan vendor:publish --tag="iterative-eloquent-models-config"
+php artisan vendor:publish --tag="models-collection-config"
 ```
 
 This is the contents of the published config file:

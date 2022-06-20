@@ -10,7 +10,7 @@ uses(TestCase::class)->in(__DIR__);
 
 function modelsPath(): DirectoryPath
 {
-    return tap(DirectoryPath::from(config('iterative-eloquent-models.models_path')),
+    return tap(DirectoryPath::from(config('models-collection.models_path')),
         fn ($dir) => IterativeEloquentModels::usingDirectories($dir)
     );
 }

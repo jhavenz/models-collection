@@ -10,12 +10,12 @@ class IterativeEloquentModelsServiceProvider extends PackageServiceProvider
     public function configurePackage(Package $package): void
     {
         $package
-            ->name('iterative-eloquent-models')
+            ->name('models-collection')
             ->hasConfigFile();
     }
 
     public function registeringPackage()
     {
-        $this->app->singleton(ModelsCollection::class);
+        $this->app->bind(ModelsCollection::class);
     }
 }

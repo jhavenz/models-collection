@@ -1,6 +1,6 @@
 # Changelog
 
-All notable changes to `iterative-eloquent-models` will be documented in this file.
+All notable changes to `models-collection` will be documented in this file.
 
 ## 1.0.0 - 202X-XX-XX
 

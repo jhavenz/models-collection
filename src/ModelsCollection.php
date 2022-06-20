@@ -4,6 +4,7 @@ namespace Jhavens\IterativeEloquentModels;
 
 use ArrayIterator;
 use Closure;
+use Exception;
 use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Database\Eloquent\Model;
@@ -16,6 +17,8 @@ use IteratorAggregate;
 use Jhavens\IterativeEloquentModels\Iterator\ModelIterator;
 use Jhavens\IterativeEloquentModels\Structs\Filesystem\DirectoryPath;
 use Jhavens\IterativeEloquentModels\Structs\Filesystem\FilePath;
+use Jhavens\IterativeEloquentModels\Structs\Filesystem\Path;
+use OutOfBoundsException;
 use SplFileInfo;
 use Symfony\Component\Finder\Finder;
 use Symfony\Component\Finder\SplFileInfo as SymfonyFileInfo;
@@ -31,13 +34,11 @@ class ModelsCollection implements IteratorAggregate, Arrayable, \Countable
     use Conditionable
         , ForwardsCalls;
 
-    private Set $files;
-    private Set $directories;
     private static array $filters = [];
     private static ?ModelIterator $iterator;
 
     /** enforce singleton */
-    private function __construct() {}
+    private function __construct(protected $items = []) {}
 
     public function addFilter(Closure $filter): static
     {
@@ -46,30 +47,31 @@ class ModelsCollection implements IteratorAggregate, Arrayable, \Countable
         return $this;
     }
 
-    /** @noinspection PhpIncompatibleReturnTypeInspection */
-    public static function toBase(): Collection
+    public function all(): array
     {
-        return collect(static::create()->toArray())->map(fn (FilePath $filePath): Model => $filePath->instance());
+        return $this->toArray();
     }
 
-    /** @noinspection PhpIncompatibleReturnTypeInspection */
-    public static function make(): EloquentCollection
+    public static function create($items = []): static
     {
-        return EloquentCollection::make(static::create()->toArray())->map(fn (FilePath $filePath): Model => $filePath->instance());
+        if (app()->resolved($class = ModelsCollection::class)) {
+            return tap(app($class), fn (self $self) => count($items) && $self->setItems($items));
+        }
+
+        return app()->instance($class, new static($items));
     }
 
     public function count(): int
     {
-        return iterator_count($this->getIterator());
+        return count($this->toArray());
     }
 
-    public static function flush(): static
+    public static function flush(): void
     {
+        IterativeEloquentModels::flush();
         self::$filters = [];
         self::$iterator = null;
-        app()->forgetInstance(ModelsCollection::class);
-
-        return static::create();
+        unset(app()[ModelsCollection::class]);
     }
 
     public function getIterator(): ModelIterator
@@ -127,23 +129,72 @@ class ModelsCollection implements IteratorAggregate, Arrayable, \Countable
         );
     }
 
-    public static function create(): static
+    /** @noinspection PhpIncompatibleReturnTypeInspection */
+    public static function make(): EloquentCollection
     {
-        if (app()->resolved(ModelsCollection::class)) {
-            return app(ModelsCollection::class);
-        }
+        return EloquentCollection::make(static::create()->toArray())->map(fn (FilePath $filePath): Model => $filePath->instance());
+    }
 
-        return app()->instance(ModelsCollection::class, new static);
+    public function setItems(array $items): static
+    {
+        $this->items = $items;
+
+        return $this;
+    }
+
+    public function sort(bool $preserveKeys = false): static
+    {
+        return $this
+            ->toBase()
+            ->pipe(function (Collection $models) use ($preserveKeys) {
+                $items = $models->all();
+
+                uasort($items, function ($a, $b) {
+                    return strnatcasecmp(
+                        transform(self::toModel($a), fn (Model $model) => class_basename($model), fn () => PHP_INT_MIN),
+                        transform(self::toModel($b), fn (Model $model) => class_basename($model), fn () => PHP_INT_MIN)
+                    );
+                });
+
+                return $preserveKeys
+                    ? static::create($items)
+                    : static::create(array_values($items));
+            });
     }
 
     public function toArray(): array
     {
-        return array_values(iterator_to_array($this->getIterator()));
+        return isset($this->items) && count($this->items)
+            ? $this->items
+            : array_values(iterator_to_array($this->getIterator()));
     }
 
-    public function __get(string $name)
+    /** @noinspection PhpIncompatibleReturnTypeInspection */
+    public static function toBase(): Collection
     {
-        return static::toBase()->$name;
+        return collect(static::create()->toArray())->map(fn (Model|string|FilePath $item): Model => self::toModel($item));
+    }
+
+    /** @return Collection<array-key, class-string<Model>> */
+    public function toClassString(): Collection
+    {
+        return $this
+            ->map(fn ($item) =>
+                ($class = self::toModel($item))
+                    ? get_class($class)
+                    : null
+            )
+            ->filter();
+    }
+
+    /** @noinspection PhpIncompatibleReturnTypeInspection */
+    private static function toModel(Model|string|FilePath|null $model): ?Model
+    {
+        return match(TRUE) {
+            $model instanceof Model => $model,
+            is_string($model), $model instanceOf Path => FilePath::factory($model)->instance(),
+            default => null
+        };
     }
 
     public function __call(string $method, array $parameters)
@@ -153,10 +204,23 @@ class ModelsCollection implements IteratorAggregate, Arrayable, \Countable
 
     public static function __callStatic(string $method, array $parameters)
     {
+        if (method_exists(self::class, $method)) {
+            return static::create()->$method(...$parameters);
+        }
+
         if (! method_exists($collection = self::toBase(), $method)) {
             self::throwBadMethodCallException($method);
         }
 
         return $collection->$method(...$parameters);
+    }
+
+    public function __get(string $name)
+    {
+        try {
+            return static::toBase()->__get($name);
+        } catch (Exception) {
+            throw new OutOfBoundsException("[{$name}] is not a valid method on the underlying collection");
+        }
     }
 }
