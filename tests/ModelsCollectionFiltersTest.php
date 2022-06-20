@@ -2,7 +2,7 @@
 
 use Illuminate\Database\Eloquent\Model;
 use Jhavenz\ModelsCollection\ModelsCollection;
-use Jhavenz\ModelsCollection\Repository;
+use Jhavenz\ModelsCollection\Settings\Repository;
 use Jhavenz\ModelsCollection\Structs\Filesystem\FilePath;
 use Jhavenz\ModelsCollection\Tests\Fixtures\Models\Post;
 use Jhavenz\ModelsCollection\Tests\Fixtures\Models\Role;

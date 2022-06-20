@@ -4,7 +4,7 @@ namespace Jhavenz\ModelsCollection\Structs\Filesystem;
 
 use Illuminate\Database\Eloquent\Model;
 use InvalidArgumentException;
-use Jhavenz\ModelsCollection\Repository;
+use Jhavenz\ModelsCollection\Settings\Repository;
 use JsonSerializable;
 use SplFileInfo;
 use Stringable;

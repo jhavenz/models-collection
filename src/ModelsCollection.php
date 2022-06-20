@@ -15,6 +15,7 @@ use Illuminate\Support\Traits\ForwardsCalls;
 use Innmind\Immutable\Set;
 use IteratorAggregate;
 use Jhavenz\ModelsCollection\Iterator\ModelIterator;
+use Jhavenz\ModelsCollection\Settings\Repository;
 use Jhavenz\ModelsCollection\Structs\Filesystem\DirectoryPath;
 use Jhavenz\ModelsCollection\Structs\Filesystem\FilePath;
 use Jhavenz\ModelsCollection\Structs\Filesystem\Path;

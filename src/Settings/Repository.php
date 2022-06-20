@@ -1,9 +1,10 @@
 <?php declare(strict_types=1);
 
-namespace Jhavenz\ModelsCollection;
+namespace Jhavenz\ModelsCollection\Settings;
 
 use Innmind\Immutable\Set;
 use Jhavenz\ModelsCollection\Exceptions\DirectoryPathException;
+use Jhavenz\ModelsCollection\ModelsCollection;
 use Jhavenz\ModelsCollection\Structs\Filesystem\DirectoryPath;
 use Jhavenz\ModelsCollection\Structs\Filesystem\FilePath;
 use Jhavenz\ModelsCollection\Structs\Filesystem\Path;
