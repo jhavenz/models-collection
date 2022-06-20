@@ -71,7 +71,7 @@ Contributions are welcome!
 
 ## Security Vulnerabilities
 
-Please email me at mail@jhavens.tech if if/when any vulnerabilities are found
+Please email me at mail@jhavens.tech if any vulnerabilities are found
 
 ## Credits
 
