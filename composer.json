@@ -1,12 +1,12 @@
 {
-    "name": "jhavens/iterative-eloquent-models",
-    "description": "provides a simple way to iterate over eloquent model instances",
+    "name": "jhavens/models-collection",
+    "description": "a simple way to collect/iterate over the eloquent models in a project",
     "keywords": [
         "jhavens",
         "laravel",
         "iterative-eloquent-models"
     ],
-    "homepage": "https://github.com/jhavens/iterative-eloquent-models",
+    "homepage": "https://github.com/jhavens/models-collection",
     "license": "MIT",
     "authors": [
         {
@@ -32,8 +32,7 @@
     },
     "autoload": {
         "psr-4": {
-            "Jhavens\\IterativeEloquentModels\\": "src",
-            "Jh-83\\IterativeEloquentModels\\": "src/helpers.php"
+            "Jhavens\\IterativeEloquentModels\\": "src"
         },
         "files": [
             "src/helpers.php"

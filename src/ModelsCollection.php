@@ -47,15 +47,15 @@ class ModelsCollection implements IteratorAggregate, Arrayable, \Countable
     }
 
     /** @noinspection PhpIncompatibleReturnTypeInspection */
-    public static function toCollection(): Collection
+    public static function toBase(): Collection
     {
-        return collect(static::make()->toArray())->map(fn (FilePath $filePath): Model => $filePath->instance());
+        return collect(static::create()->toArray())->map(fn (FilePath $filePath): Model => $filePath->instance());
     }
 
     /** @noinspection PhpIncompatibleReturnTypeInspection */
-    public static function toEloquentCollection(): EloquentCollection
+    public static function make(): EloquentCollection
     {
-        return EloquentCollection::make(static::make()->toArray())->map(fn (FilePath $filePath): Model => $filePath->instance());
+        return EloquentCollection::make(static::create()->toArray())->map(fn (FilePath $filePath): Model => $filePath->instance());
     }
 
     public function count(): int
@@ -69,7 +69,7 @@ class ModelsCollection implements IteratorAggregate, Arrayable, \Countable
         self::$iterator = null;
         app()->forgetInstance(ModelsCollection::class);
 
-        return static::make();
+        return static::create();
     }
 
     public function getIterator(): ModelIterator
@@ -127,7 +127,7 @@ class ModelsCollection implements IteratorAggregate, Arrayable, \Countable
         );
     }
 
-    public static function make(): static
+    public static function create(): static
     {
         if (app()->resolved(ModelsCollection::class)) {
             return app(ModelsCollection::class);
@@ -143,17 +143,17 @@ class ModelsCollection implements IteratorAggregate, Arrayable, \Countable
 
     public function __get(string $name)
     {
-        return static::toCollection()->$name;
+        return static::toBase()->$name;
     }
 
     public function __call(string $method, array $parameters)
     {
-        return $this->forwardDecoratedCallTo(self::toCollection(), $method, $parameters);
+        return $this->forwardDecoratedCallTo(self::toBase(), $method, $parameters);
     }
 
     public static function __callStatic(string $method, array $parameters)
     {
-        if (! method_exists($collection = self::toCollection(), $method)) {
+        if (! method_exists($collection = self::toBase(), $method)) {
             self::throwBadMethodCallException($method);
         }
 

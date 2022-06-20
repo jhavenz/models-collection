@@ -25,9 +25,9 @@ it('isnt empty when not explicitly given a models directory', function () {
 it('can have a file set when given a directory string', function () {
     IterativeEloquentModels::usingDirectories(DirectoryPath::from(__DIR__.'/Fixtures/Models'));
 
-    expect(ModelsCollection::make())
+    expect(ModelsCollection::create())
         ->toHaveCount(4)
-        ->and(ModelsCollection::toCollection()->map(fn ($model) => $model::class)->sort()->values()->all())
+        ->and(ModelsCollection::toBase()->map(fn ($model) => $model::class)->sort()->values()->all())
         ->toMatchArray([
             RoleUser::class,
             Post::class,
@@ -39,11 +39,11 @@ it('can have a file set when given a directory string', function () {
 it('acknowledges depth', function () {
     IterativeEloquentModels::usingDepth('== 0');
 
-    $models = ModelsCollection::make();
+    $models = ModelsCollection::create();
 
     expect($models)
         ->toHaveCount(3)
-        ->and(ModelsCollection::toCollection()->map(fn ($model) => $model::class)->sort()->values()->all())
+        ->and(ModelsCollection::toBase()->map(fn ($model) => $model::class)->sort()->values()->all())
         ->toMatchArray([
             Post::class,
             Role::class,
@@ -54,7 +54,7 @@ it('acknowledges depth', function () {
 it('can have a model class string filter', function () {
     IterativeEloquentModels::only(Post::class);
 
-    expect($models = ModelsCollection::make()->toArray())->toHaveCount(1)
+    expect($models = ModelsCollection::create()->toArray())->toHaveCount(1)
         ->and($file = $models[0])->toBeInstanceOf(FilePath::class)
         ->and($file->instance())->toBeInstanceOf(Post::class);
 });
@@ -62,7 +62,7 @@ it('can have a model class string filter', function () {
 it('can have a model file string filter', function () {
     IterativeEloquentModels::only(FilePath::fromClassString(Post::class));
 
-    expect($models = ModelsCollection::make()->toArray())->toHaveCount(1)
+    expect($models = ModelsCollection::create()->toArray())->toHaveCount(1)
         ->and($file = $models[0])->toBeInstanceOf(FilePath::class)
         ->and($file->instance())->toBeInstanceOf(Post::class);
 });
@@ -70,7 +70,7 @@ it('can have a model file string filter', function () {
 it('can have multiple model class string filters', function () {
     IterativeEloquentModels::only(Post::class, Role::class);
 
-    $models = ModelsCollection::make()->toArray();
+    $models = ModelsCollection::create()->toArray();
 
     expect($models)->toHaveCount(2)
         ->and($file = $models[1])->toBeInstanceOf(FilePath::class)
@@ -83,13 +83,13 @@ it('can have multiple model file string filters', function () {
         FilePath::factory(Role::class)
     );
 
-    expect($models = ModelsCollection::make()->toArray())->toHaveCount(2)
+    expect($models = ModelsCollection::create()->toArray())->toHaveCount(2)
         ->and($file = $models[1])->toBeInstanceOf(FilePath::class)
         ->and($file->instance())->toBeInstanceOf(Role::class);
 });
 
 it('has all models when no filters are given', function () {
-    $models = ModelsCollection::toCollection();
+    $models = ModelsCollection::toBase();
 
     expect($models)
         ->toHaveCount(4)
@@ -101,7 +101,7 @@ it('can have one model when filter is given', function () {
         FilePath::factory(Post::class),
     );
 
-    expect($models = ModelsCollection::toCollection())
+    expect($models = ModelsCollection::toBase())
         ->toHaveCount(1)
         ->and($models->first())->toBeInstanceOf(Model::class);
 });
@@ -112,7 +112,7 @@ it('can have some models when filters are given', function () {
         FilePath::factory(User::class)
     );
 
-    expect($models = ModelsCollection::toCollection())
+    expect($models = ModelsCollection::toBase())
         ->toHaveCount(2)
         ->and($models->map(fn ($model) => $model::class))
         ->each
@@ -127,7 +127,7 @@ it('forwards static method calls to the underlying collection', function () {
 it('forwards non-static method calls to the underlying collection, allowing for higher order proxy', function () {
     expect(schema()->getAllTables())->toHaveCount(0);
 
-    ModelsCollection::make()->each->runMigrations();
+    ModelsCollection::create()->each->runMigrations();
 
     expect(schema()->getAllTables())->toHaveCount(4);
 });

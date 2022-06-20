@@ -29,7 +29,7 @@ use Jhavens\IterativeEloquentModels\ModelsCollection;
 $totals = [];
 
 /** @var \Illuminate\Database\Eloquent\Model $model */
-foreach (ModelsCollection::make() as $model) {
+foreach (ModelsCollection::create() as $model) {
     $totals[$model->getTable()] = $model->newQuery()->count();
 }
 
@@ -44,7 +44,7 @@ dump($totals);
 
 // or
 
-ModelsCollection::toCollection()->map->getTable();
+ModelsCollection::toBase()->map->getTable();
 
 dump($totals);
 /**

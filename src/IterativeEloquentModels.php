@@ -71,7 +71,7 @@ class IterativeEloquentModels
             return tap(FilePath::factory($path), fn ($p) => self::usingDirectories($p));
         }, $filters);
 
-        ModelsCollection::make()->addFilter(function (FilePath $path) use (&$paths) {
+        ModelsCollection::create()->addFilter(function (FilePath $path) use (&$paths) {
             /** @var FilePath $p */
             foreach ($paths as $p) {
                  if ($path->classString() === $p->classString()) {
