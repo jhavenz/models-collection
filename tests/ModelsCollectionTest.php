@@ -11,28 +11,29 @@ use Jhavenz\ModelsCollection\Tests\Fixtures\Models\Post;
 use Jhavenz\ModelsCollection\Tests\Fixtures\Models\Role;
 use Jhavenz\ModelsCollection\Tests\Fixtures\Models\User;
 
-afterEach(fn () => ModelsCollection::flush());
+it('can have no directories or files given', function () {
+    config(['models-collection.directories' => []]);
 
+    expect(ModelsCollection::create()->toArray())->toHaveCount(0);
+});
 
-it('isnt empty when not explicitly given a models directory', function () {
+it('isnt empty when not explicitly given any models, files, or directories', function () {
     expect($models = ModelsCollection::create()->toArray())
-        ->not
-        ->toBeEmpty()
+        ->toBeArray()
         ->and($models)
         ->toHaveCount(4);
 });
 
-it('has all models when given a directory', function () {
-    Repository::usingDirectories(DirectoryPath::from(__DIR__.'/Fixtures/Models'));
+it('has only has specified models when given 1 directory', function () {
+    config(['models-collection.directories' => [
+        DirectoryPath::from(__DIR__.'/Fixtures/Models/Pivot')->path()
+    ]]);
 
     expect(ModelsCollection::create())
-        ->toHaveCount(4)
-        ->and(ModelsCollection::create()->sort()->toClassString()->toArray())
+        ->toHaveCount(1)
+        ->and(ModelsCollection::create()->toClassString()->values()->toArray())
         ->toMatchArray([
-            Post::class,
-            Role::class,
             RoleUser::class,
-            User::class,
         ]);
 });
 
@@ -43,7 +44,7 @@ it('acknowledges depth', function () {
 
     expect($models)
         ->toHaveCount(3)
-        ->and(ModelsCollection::toBase()->map(fn ($model) => $model::class)->sort()->values()->all())
+        ->and($models->toBase()->map(fn ($model) => $model::class)->sort()->values()->all())
         ->toMatchArray([
             Post::class,
             Role::class,

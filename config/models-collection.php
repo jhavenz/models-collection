@@ -1,5 +1,11 @@
 <?php
 
 return [
-    'models_path' => app_path('Models')
+    /* ---------------------------------------------------------------
+     | (absolute) Path(s) to where your models live in your project.
+     */
+    'directories' => [],
+    //'directories' => [
+    //    app_path('Models')
+    //]
 ];

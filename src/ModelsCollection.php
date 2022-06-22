@@ -2,7 +2,6 @@
 
 namespace Jhavenz\ModelsCollection;
 
-use ArrayIterator;
 use Closure;
 use Exception;
 use Illuminate\Contracts\Support\Arrayable;
@@ -12,19 +11,14 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Enumerable;
 use Illuminate\Support\Traits\Conditionable;
 use Illuminate\Support\Traits\ForwardsCalls;
-use Innmind\Immutable\Set;
 use IteratorAggregate;
 use Jhavenz\ModelsCollection\Iterator\ModelIterator;
-use Jhavenz\ModelsCollection\Settings\Repository;
 use Jhavenz\ModelsCollection\Structs\Filesystem\DirectoryPath;
 use Jhavenz\ModelsCollection\Structs\Filesystem\FilePath;
 use Jhavenz\ModelsCollection\Structs\Filesystem\Path;
 use OutOfBoundsException;
-use SplFileInfo;
-use Symfony\Component\Finder\Finder;
-use Symfony\Component\Finder\SplFileInfo as SymfonyFileInfo;
-use function app;
 use function collect;
+use function Jhavenz\rescueQuietly;
 
 /**
  * @implements Enumerable
@@ -35,15 +29,20 @@ class ModelsCollection implements IteratorAggregate, Arrayable, \Countable
     use Conditionable
         , ForwardsCalls;
 
-    private static array $filters = [];
-    private static ?ModelIterator $iterator;
+    public function __construct(
+        protected $files = [],
+        protected $directories = [],
+        protected $filters = []
+    ) {
+        $this->directories = array_unique([
+            ...config('app.models_path', config('models-collection.directories', [])),
+            ...$directories
+        ]);
+    }
 
-    /** enforce singleton */
-    private function __construct(protected $items = []) {}
-
-    public function addFilter(Closure $filter): static
+    public function addFilter(Closure ...$filters): static
     {
-        static::$filters[] = $filter;
+        $this->filters = array_merge($this->filters, $filters);
 
         return $this;
     }
@@ -53,13 +52,9 @@ class ModelsCollection implements IteratorAggregate, Arrayable, \Countable
         return $this->toArray();
     }
 
-    public static function create($items = []): static
+    public static function create(array $files = [], array $directories = [], array $filters = []): static
     {
-        if (app()->resolved($class = ModelsCollection::class)) {
-            return tap(app($class), fn (self $self) => count($items) && $self->setItems($items));
-        }
-
-        return app()->instance($class, new static($items));
+        return app(ModelsCollection::class, compact('files', 'directories', 'filters'));
     }
 
     public function count(): int
@@ -67,58 +62,36 @@ class ModelsCollection implements IteratorAggregate, Arrayable, \Countable
         return count($this->toArray());
     }
 
-    public static function flush(): void
-    {
-        Repository::flush();
-        self::$filters = [];
-        self::$iterator = null;
-        unset(app()[ModelsCollection::class]);
-    }
-
     public function getIterator(): ModelIterator
     {
-        return self::$iterator ??= new ModelIterator(new ArrayIterator(
-            $this->getFiles()->toList()
-        ), self::$filters);
+        return new ModelIterator(
+            $this->getFiles()->getIterator(),
+            $this->filters
+        );
     }
 
-    /** @return Set<DirectoryPath> */
-    public function getDirectories(): Set
+    private function getDirectoryFiles(): Collection
     {
-        return Repository::directories();
+        return collect([
+                ...config('app.models_path', config('models-collection.directories', [])),
+                ...$this->directories ?? []
+            ])
+            ->unique()
+            ->flatMap(fn (string|DirectoryPath $directoryPath) => DirectoryPath::factory($directoryPath)->getFiles());
     }
 
-    private function getDirectoryFinders(): Set
+    /** @return Collection<FilePath> */
+    private function getFiles(): Collection
     {
-        return $this->getDirectories()->map(fn (string $path) => DirectoryPath::factory($path)->fileFinder());
+        return collect($this->files ?? [])
+            ->map(fn (string|FilePath $path) => FilePath::factory($path))
+            ->merge($this->getDirectoryFiles())
+            ->unique(fn (FilePath $fp) => $fp->path());
     }
 
-    private function getFilePaths(Finder $finder): array
+    public function hasPath(mixed $path): bool
     {
-        return collect($finder)
-            ->map(fn (SymfonyFileInfo $fileInfo) => $fileInfo->isFile() ? FilePath::from($fileInfo->getRealPath()) : null)
-            ->filter()
-            ->all();
-    }
-
-    /** @return Set<FilePath> */
-    private function getFiles(): Set
-    {
-        return $this
-            ->getDirectoryFinders()
-            ->flatMap(function (Finder $finder) {
-                return Set::objects(...$this->getFilePaths($finder));
-            });
-    }
-
-    public function getFilterCount(): int
-    {
-        return count(static::$filters ?? []);
-    }
-
-    public function hasPath(string|SplFileInfo|FilePath $path): bool
-    {
-        return self::$iterator->contains($path);
+        return $this->contains(fn (mixed $item) => Path::factory($item)->path() === Path::factory($path)->path());
     }
 
     public static function isValid(mixed $class): bool
@@ -136,9 +109,9 @@ class ModelsCollection implements IteratorAggregate, Arrayable, \Countable
         return EloquentCollection::make(static::create()->toArray())->map(fn (FilePath $filePath): Model => $filePath->instance());
     }
 
-    public function setItems(array $items): static
+    public function setDirectories(array $directories): static
     {
-        $this->items = $items;
+        $this->directories = $directories;
 
         return $this;
     }
@@ -165,37 +138,31 @@ class ModelsCollection implements IteratorAggregate, Arrayable, \Countable
 
     public function toArray(): array
     {
-        return empty($this->items)
-            ? array_values(iterator_to_array($this->getIterator()))
-            : $this->items;
+        return iterator_to_array($this->getIterator());
     }
 
     /** @noinspection PhpIncompatibleReturnTypeInspection */
-    public static function toBase(): Collection
+    public function toBase(): Collection
     {
-        return collect(static::create()->toArray())->map(fn (Model|string|FilePath $item): Model => self::toModel($item));
+        return $this->getFiles()->map(fn (mixed $item): ?Model => self::toModel($item))->filter();
     }
 
     /** @return Collection<array-key, class-string<Model>> */
     public function toClassString(): Collection
     {
-        return $this
-            ->map(fn ($item) =>
-                ($class = self::toModel($item))
-                    ? get_class($class)
-                    : null
-            )
-            ->filter();
+        return $this->map(fn ($item) => Path::factory($item)->toClassString());
     }
 
     /** @noinspection PhpIncompatibleReturnTypeInspection */
-    private static function toModel(Model|string|FilePath|null $model): ?Model
+    private static function toModel(mixed $model): ?Model
     {
-        return match(TRUE) {
-            $model instanceof Model => $model,
-            is_string($model), $model instanceOf Path => FilePath::factory($model)->instance(),
-            default => null
-        };
+        return rescueQuietly(
+            fn () => match(TRUE) {
+                $model instanceof Model => $model,
+                is_string($model), $model instanceOf Path => FilePath::factory($model)->instance(),
+                default => null
+            }
+        );
     }
 
     public function __call(string $method, array $parameters)

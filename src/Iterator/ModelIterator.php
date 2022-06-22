@@ -5,7 +5,6 @@ namespace Jhavenz\ModelsCollection\Iterator;
 use FilterIterator;
 use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Database\Eloquent\Model;
-use Innmind\Immutable\Set;
 use Iterator;
 use Jhavenz\ModelsCollection\Structs\Filesystem\FilePath;
 use function Jhavenz\rescueQuietly;
@@ -17,65 +16,60 @@ use function Jhavenz\rescueQuietly;
  */
 class ModelIterator extends FilterIterator implements Arrayable
 {
-    private static Set $accepted;
+    // optimization
+    private static array $accepted = [];
 
-    public function __construct(Iterator $paths, private array $customFilters = [])
+    public function __construct(Iterator $paths, private array $filters = [])
     {
-        self::$accepted ??= Set::strings();
-
         parent::__construct($paths);
     }
 
-    public function contains(Model|string|FilePath $item): bool
+    public function contains(mixed $item): bool
     {
-        return self::$accepted->contains(FilePath::factory($item)->path());
+        return in_array(FilePath::factory($item)->path(), self::$accepted);
     }
 
     public function accept(): bool
     {
-        $current = $this->current();
+        if ($this->contains($current = $this->current())) {
+            return true;
+        }
 
         $isModel = rescueQuietly(
             fn () => is_a($current?->instance(), Model::class),
             fn () => false
         );
 
+        ray([
+            'isModel' => $isModel,
+            'current' => $current
+        ]);
+
         if (! $isModel) {
             return false;
         }
 
-        foreach ($this->customFilters as $filter) {
+        foreach ($this->filters as $filter) {
             if (! $filter($current)) {
                 return false;
             }
         }
 
-        $this->addAcceptedPath($current);
+        self::$accepted = array_unique([
+            ...self::$accepted,
+            $current->path()
+        ]);
 
         return true;
     }
 
     public function current(): ?FilePath
     {
-        $current = parent::current();
-
-        return match(TRUE) {
-            is_string($current) => FilePath::from($current),
-            $current instanceof FilePath => $current,
-            default => null
-        };
+        return ($path = parent::current()) ? FilePath::factory($path) : $path;
     }
 
     public function toArray(): array
     {
         return iterator_to_array($this);
-    }
-
-    /**
-     * @param FilePath $fp
-     */
-    private function addAcceptedPath(FilePath $fp): void
-    {
-        self::$accepted = self::$accepted->merge(Set::strings($fp->path()));
     }
 }

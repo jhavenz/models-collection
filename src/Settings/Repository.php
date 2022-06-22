@@ -31,6 +31,9 @@ class Repository
     /** @return Set<DirectoryPath> */
     public static function directories(): Set
     {
+        return Set::strings(
+            ...config('app.models_path', config('models-collection.directories'))
+        );
         if (! empty(self::$directories) && filled(array_filter(self::$directories->toList()))) {
             return self::$directories->filter(fn ($path) => filled($path));
         }
@@ -77,6 +80,7 @@ class Repository
 
     private static function getDefaultDirectory(): string
     {
+        return config('app.models_path', config('models-collection.directories'));
         return match (TRUE) {
             config()->has($appConfigPath = 'app.models_path') => config($appConfigPath),
             config()->has($pkgConfigPath = 'models-collection.models_path') => config($pkgConfigPath),
@@ -84,11 +88,5 @@ class Repository
             is_dir($appPath = app_path()) => $appPath,
             default => throw DirectoryPathException::noDefault()
         };
-    }
-
-    public static function flush()
-    {
-        self::$directories = Set::of(null);
-        self::$depth = [];
     }
 }

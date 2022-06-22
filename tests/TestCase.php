@@ -21,6 +21,8 @@ class TestCase extends Orchestra
     {
         config()->set('database.default', 'testing');
 
-        config()->set('models-collection.models_path', __DIR__.'/Fixtures/Models');
+        config()->set('models-collection.directories', [
+            __DIR__.'/Fixtures/Models'
+        ]);
     }
 }

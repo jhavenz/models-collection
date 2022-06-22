@@ -3,7 +3,7 @@
 namespace Jhavenz\ModelsCollection\Structs\Filesystem;
 
 use Illuminate\Database\Eloquent\Model;
-use InvalidArgumentException;
+use Illuminate\Support\Collection;
 use Jhavenz\ModelsCollection\Settings\Repository;
 use JsonSerializable;
 use SplFileInfo;
@@ -30,7 +30,7 @@ abstract class Path implements Stringable, JsonSerializable
     /** @return Finder<SymfonyFileInfo> */
     public function fileFinder(): Finder
     {
-        return $this->makeFinderForPath($this->path(), filesOnly: true);
+        return $this->finder ??= $this->makeFinderForPath($this->path(), filesOnly: true);
     }
 
     public static function from(mixed $path): static
@@ -47,7 +47,7 @@ abstract class Path implements Stringable, JsonSerializable
             $path instanceof Model => FilePath::fromClassString($path::class),
             is_file($path) => FilePath::from($path),
             is_dir($path) => DirectoryPath::from($path),
-            default => throw new InvalidArgumentException("[{$path}] was not found to be a file or a directory path")
+            default => InvalidPath::from($path)
         };
     }
 
@@ -62,6 +62,7 @@ abstract class Path implements Stringable, JsonSerializable
     }
 
     /** @noinspection PhpMissingReturnTypeInspection */
+    #[\ReturnTypeWillChange]
     public function jsonSerialize()
     {
         return (string) $this;
@@ -88,6 +89,11 @@ abstract class Path implements Stringable, JsonSerializable
                 }
             }
         );
+    }
+
+    public function toClassString(): null|string|Collection
+    {
+        return null;
     }
 
     private function getMinMaxDepth(): array
