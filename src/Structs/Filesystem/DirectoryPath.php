@@ -10,8 +10,15 @@ use Symfony\Component\Finder\SplFileInfo as SymfonyFileInfo;
 
 class DirectoryPath extends Path
 {
-    private Finder $finder;
-    private Collection $files;
+    protected Finder $finder;
+    protected Collection $files;
+
+    public function __construct(
+        string $path,
+        private readonly int|string|array $depth = []
+    ) {
+       parent::__construct($path);
+    }
 
     public static function factory(mixed $path): DirectoryPath
     {
@@ -26,6 +33,11 @@ class DirectoryPath extends Path
         return $this->files ??= collect($this->fileFinder())->map(fn (SymfonyFileInfo $fileInfo) =>
             FilePath::from($fileInfo->getRealPath())
         );
+    }
+
+    public function makeFinderForPath(string $path, bool $filesOnly = false, bool $directoriesOnly = false): Finder
+    {
+        return parent::makeFinderForPath($path, $filesOnly, $directoriesOnly)->depth($this->depth);
     }
 
     public function require(): static
@@ -49,5 +61,13 @@ class DirectoryPath extends Path
         if (is_link($this->path())) {
             throw ModelIteratorException::noSymlinksAllowed($this->path());
         }
+    }
+
+    public function setDepth(int|string|array $depth): static
+    {
+        return new static(
+            $this->path(),
+            $depth
+        );
     }
 }

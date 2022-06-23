@@ -1,12 +1,13 @@
 <?php
 
-namespace Jhavenz\ModelsCollection\Iterator;
+namespace Jhavenz\ModelsCollection;
 
 use FilterIterator;
 use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Database\Eloquent\Model;
 use Iterator;
 use Jhavenz\ModelsCollection\Structs\Filesystem\FilePath;
+
 use function Jhavenz\rescueQuietly;
 
 /**
@@ -14,7 +15,7 @@ use function Jhavenz\rescueQuietly;
  *
  * @implements T
  */
-class ModelIterator extends FilterIterator implements Arrayable
+class ModelPathIterator extends FilterIterator implements Arrayable
 {
     // optimization
     private static array $accepted = [];

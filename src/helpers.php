@@ -50,3 +50,10 @@ if (! function_exists('eloquentModels')) {
         return ModelsCollection::make();
     }
 }
+
+if (! function_exists('removeConfiguredDirectories')) {
+    function removeConfiguredDirectories(): void
+    {
+        config(['models-collection.directories' => []]);
+    }
+}

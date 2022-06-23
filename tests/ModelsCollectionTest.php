@@ -3,7 +3,6 @@
 /** @noinspection PhpVoidFunctionResultUsedInspection */
 
 use Jhavenz\ModelsCollection\ModelsCollection;
-use Jhavenz\ModelsCollection\Settings\Repository;
 use Jhavenz\ModelsCollection\Structs\Filesystem\DirectoryPath;
 use Jhavenz\ModelsCollection\Structs\Filesystem\FilePath;
 use Jhavenz\ModelsCollection\Tests\Fixtures\Models\Pivot\RoleUser;
@@ -38,11 +37,7 @@ it('has only has specified models when given 1 directory', function () {
 });
 
 it('acknowledges depth', function () {
-    Repository::usingDepth('== 0');
-
-    $models = ModelsCollection::create();
-
-    expect($models)
+    expect($models = ModelsCollection::usingDepth('== 0')->values())
         ->toHaveCount(3)
         ->and($models->toBase()->map(fn ($model) => $model::class)->sort()->values()->all())
         ->toMatchArray([
@@ -53,7 +48,6 @@ it('acknowledges depth', function () {
 });
 
 it('forwards non-static method calls to the underlying collection, allowing higher order tap', function () {
-
     expect(schema()->getAllTables())->toHaveCount(0);
 
     ModelsCollection::create()->each->runMigrations();
@@ -61,18 +55,25 @@ it('forwards non-static method calls to the underlying collection, allowing high
     expect(schema()->getAllTables())->toHaveCount(4);
 });
 
+it('allows a model class-string to be given', function () {
+    removeConfiguredDirectories();
+
+    expect(ModelsCollection::create([Post::class])->first())->toBeInstanceOf(Post::class);
+});
 
 it('forwards static method calls to the underlying collection', function () {
     expect(ModelsCollection::whereInstanceOf(Post::class)->first())->toBeInstanceOf(Post::class);
 });
 
 it('can have some models when filters are given', function () {
-    Repository::only(
+    $models = ModelsCollection::usingFilters(
         FilePath::factory(Post::class),
         FilePath::factory(User::class)
     );
 
-    expect($models = ModelsCollection::toBase())
+    dd($models);
+
+    expect($models->toBase())
         ->toHaveCount(2)
         ->and($models->map(fn ($model) => $model::class))
         ->each

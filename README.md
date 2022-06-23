@@ -31,40 +31,8 @@ Jhavenz\ModelsCollection\Settings\Repository::only(
     \App\Models\Role::class, 
     \App\Models\Permission::class, 
     \App\Models\Pivot\RoleUser::class,
-)
-
-**Note: use `\Jhavenz\ModelsCollection\ModelsCollection::flush()` to clear the filters after you're done with them**
+);
 ````   
----
-
-You can use `Jhavenz\ModelsCollection\Settings\Repository::usingDepth()` to tell the finder how far to recurse within the directories given.
-
-Examples:
-```php
-use Jhavenz\ModelsCollection\Settings\Repository;
-
-# Only traverse's the top-level directory that's given 
-Repository::usingDepth('== 0')
-
-# Will only traverse 3 directories deep
-Repository::usingDepth('>= 3')
-```
----
-
-Also, you can provide multiple directories where your models are located using `Jhavenz\ModelsCollection\Settings\Repository::usingDirectories()`.
-_Though, this is optional._ 
-
-Examples:
-```php
-\Jhavenz\ModelsCollection\Settings\Repository::usingDirectories(
-    app_path('Modules/Models'), base_path('path/to/some/more/models/dir')
-)
-```
-
-If you don't provide any custom directories, this package will look check your projects directories in the following order:
-
-> - app_path('Models')
-> - app_path()
 ---
 
 ## Installation

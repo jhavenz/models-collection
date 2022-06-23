@@ -24,7 +24,7 @@ class InvalidPath extends Path
 
     public function toClassString(): ?string
     {
-        return null;
+        return '';
     }
 
     protected function validate(): void
