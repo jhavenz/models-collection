@@ -4,7 +4,6 @@ namespace Jhavenz\ModelsCollection;
 
 use ArrayIterator;
 use Closure;
-use function collect;
 use Exception;
 use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Database\Eloquent\Model;
@@ -19,8 +18,10 @@ use Jhavenz\ModelsCollection\Structs\Filesystem\Collections\Files;
 use Jhavenz\ModelsCollection\Structs\Filesystem\DirectoryPath;
 use Jhavenz\ModelsCollection\Structs\Filesystem\FilePath;
 use Jhavenz\ModelsCollection\Structs\Filesystem\Path;
-use function Jhavenz\rescueQuietly;
 use OutOfBoundsException;
+
+use function collect;
+use function Jhavenz\rescueQuietly;
 
 /**
  * @implements Enumerable
@@ -32,9 +33,7 @@ class ModelsCollection implements IteratorAggregate, Arrayable, \Countable
         , ForwardsCalls;
 
     protected Files $files;
-
     protected Directories $directories;
-
     protected Collection $models;
 
     public function __construct(
@@ -45,20 +44,20 @@ class ModelsCollection implements IteratorAggregate, Arrayable, \Countable
         protected int|string|array $depth = []
     ) {
         $this->files = Files::make($files ?? [])
-            ->filter(fn (FilePath $filePath) => is_a($filePath->toClassString(), Model::class, true));
+            ->filter(fn(FilePath $filePath) => is_a($filePath->toClassString(), Model::class, true));
 
         $this->directories = Directories::make([
             ...config('models-collection.directories', []),
             ...collect($directories ?? [])->all(),
         ]);
 
-        $this->models = Collection::make($models ?? [])->filter(fn ($item) => $item instanceof Model);
+        $this->models = Collection::make($models ?? [])->filter(fn($item) => $item instanceof Model);
     }
 
     public function addFilters(string|Closure|FilePath ...$filters): static
     {
         foreach (self::toModels($filters) as $model) {
-            if ($model && ! $this->hasModel($model)) {
+            if ($model && !$this->hasModel($model)) {
                 $this->models->add(FilePath::fromClassString($model::class)->instance());
             }
         }
@@ -94,8 +93,8 @@ class ModelsCollection implements IteratorAggregate, Arrayable, \Countable
                 continue;
             }
 
-            if (! $this->passesFilters($filePath)) {
-                $this->models = $this->models->filter(fn (Model $m) => $model::class !== $m::class);
+            if (!$this->passesFilters($filePath)) {
+                $this->models = $this->models->filter(fn(Model $m) => $model::class !== $m::class);
                 continue;
             }
 
@@ -132,16 +131,16 @@ class ModelsCollection implements IteratorAggregate, Arrayable, \Countable
             ->files
             ->merge($this->directories->toFiles($this->depth))
             ->toBase()
-            ->unique(fn (FilePath $fp) => $fp->path())
-            ->filter(fn (FilePath $fp) => rescueQuietly(
-                fn () => $fp->isA(Model::class) && $this->passesFilters($fp),
-                fn () => false
+            ->unique(fn(FilePath $fp) => $fp->path())
+            ->filter(fn(FilePath $fp) => rescueQuietly(
+                fn() => $fp->isA(Model::class) && $this->passesFilters($fp),
+                fn() => false
             ));
     }
 
     public function hasFilePath(mixed $path): bool
     {
-        return $this->files->contains(fn (FilePath $fp) => $fp->path() === Path::factory($path)->path());
+        return $this->files->contains(fn(FilePath $fp) => $fp->path() === Path::factory($path)->path());
     }
 
     public static function make(
@@ -170,14 +169,14 @@ class ModelsCollection implements IteratorAggregate, Arrayable, \Countable
                 config()->set(
                     'models-collection.directories',
                     collect($directories)
-                        ->when($withConfigDirs, fn (Collection $dirs) => $dirs->merge($configuredDirs))
-                        ->map(fn ($dir) => DirectoryPath::factory($dir)->path())
+                        ->when($withConfigDirs, fn(Collection $dirs) => $dirs->merge($configuredDirs))
+                        ->map(fn($dir) => DirectoryPath::factory($dir)->path())
                         ->all()
                 );
 
                 return tap(
                     $func ? $func() : static::create(directories: $directories),
-                    fn () => config(['models-collection.directories' => $configuredDirs])
+                    fn() => config(['models-collection.directories' => $configuredDirs])
                 );
             }
         );
@@ -185,16 +184,18 @@ class ModelsCollection implements IteratorAggregate, Arrayable, \Countable
 
     /**
      * @template TFilePath \Jhavenz\ModelsCollection\Structs\Filesystem\FilePath
+     *
      * @template TFilter (Closure(TFilePath $filepath): bool)|TFilePath|class-string<Model>
      *
-     * @param  TFilter  ...$filters
+     * @param TFilter ...$filters
+     *
      * @return static
      */
     public static function usingFilters(string|Closure|FilePath ...$filters): static
     {
         $models = [];
         foreach ($filters as $filter) {
-            if (is_callable($filter) || ! ($fp = FilePath::factory($filter))->isA(Model::class)) {
+            if (is_callable($filter) || !($fp = FilePath::factory($filter))->isA(Model::class)) {
                 continue;
             }
 
@@ -208,13 +209,13 @@ class ModelsCollection implements IteratorAggregate, Arrayable, \Countable
         mixed $func = null,
         string|DirectoryPath ...$directories
     ): mixed {
-        if (! is_callable($func)) {
+        if (!is_callable($func)) {
             $directories = [$func, ...$directories];
             $func = null;
         }
 
         foreach ($directories as $d) {
-            if (! is_string($d) && ! $d instanceof DirectoryPath) {
+            if (!is_string($d) && !$d instanceof DirectoryPath) {
                 throw new ModelCollectionException(
                     "directories must be a string or an instance of [\Jhavenz\ModelsCollection\Structs\Filesystem\DirectoryPath]"
                 );
@@ -228,13 +229,13 @@ class ModelsCollection implements IteratorAggregate, Arrayable, \Countable
         mixed $func = null,
         string|DirectoryPath ...$directories
     ): mixed {
-        if (! is_callable($func)) {
+        if (!is_callable($func)) {
             $directories = [$func, ...$directories];
             $func = null;
         }
 
         foreach ($directories as $d) {
-            if (! is_string($d) && ! $d instanceof DirectoryPath) {
+            if (!is_string($d) && !$d instanceof DirectoryPath) {
                 throw new ModelCollectionException(
                     'directories must be a string or an instance of [\Jhavenz\ModelsCollection\Structs\Filesystem\DirectoryPath]'
                 );
@@ -260,8 +261,8 @@ class ModelsCollection implements IteratorAggregate, Arrayable, \Countable
 
                 uasort($items, function ($a, $b) {
                     return strnatcasecmp(
-                        transform(self::toModel($a), fn (Model $model) => class_basename($model), fn () => PHP_INT_MIN),
-                        transform(self::toModel($b), fn (Model $model) => class_basename($model), fn () => PHP_INT_MIN)
+                        transform(self::toModel($a), fn(Model $model) => class_basename($model), fn() => PHP_INT_MIN),
+                        transform(self::toModel($b), fn(Model $model) => class_basename($model), fn() => PHP_INT_MIN)
                     );
                 });
 
@@ -285,8 +286,8 @@ class ModelsCollection implements IteratorAggregate, Arrayable, \Countable
     public function toClassString(bool $sort = true, $sortFlags = SORT_NATURAL): Collection
     {
         return $this
-            ->map(fn ($item) => Path::factory($item)->toClassString())
-            ->when($sort, fn ($c) => $c->sort($sortFlags))
+            ->map(fn($item) => Path::factory($item)->toClassString())
+            ->when($sort, fn($c) => $c->sort($sortFlags))
             ->values();
     }
 
@@ -294,17 +295,17 @@ class ModelsCollection implements IteratorAggregate, Arrayable, \Countable
     {
         return $this
             ->toBase()
-            ->map(fn (Model $model) => DirectoryPath::factory($model::class)->path())
-            ->when($sort, fn ($c) => $c->sort($sortFlags))
+            ->map(fn(Model $model) => DirectoryPath::factory($model::class)->path())
+            ->when($sort, fn($c) => $c->sort($sortFlags))
             ->mapInto(DirectoryPath::class)
-            ->unique(fn (DirectoryPath $dir) => $dir->path())
+            ->unique(fn(DirectoryPath $dir) => $dir->path())
             ->pipeInto(Directories::class);
     }
 
     private static function toModel(mixed $model): ?Model
     {
         return rescueQuietly(
-            fn () => match (true) {
+            fn() => match (true) {
                 $model instanceof Model => $model,
                 ($fp = FilePath::factory($model))->isA(Model::class) => $fp->instance(),
                 default => null
@@ -325,7 +326,7 @@ class ModelsCollection implements IteratorAggregate, Arrayable, \Countable
             return $self->$method(...$parameters);
         }
 
-        if (! method_exists($collection = $self->toBase(), $method)) {
+        if (!method_exists($collection = $self->toBase(), $method)) {
             self::throwBadMethodCallException($method);
         }
 
@@ -342,13 +343,14 @@ class ModelsCollection implements IteratorAggregate, Arrayable, \Countable
     }
 
     /**
-     * @param  iterable|null  $items
+     * @param iterable|null $items
+     *
      * @return array
      */
     private static function toModels(?iterable $items = []): array
     {
         return ($items ? collect($items) : static::create()->apply())
-            ->map(fn (string|Model|FilePath $item): Model => self::toModel($item))
+            ->map(fn(string|Model|FilePath $item): Model => self::toModel($item))
             ->filter()
             ->all();
     }
@@ -365,12 +367,13 @@ class ModelsCollection implements IteratorAggregate, Arrayable, \Countable
     }
 
     /**
-     * @param  FilePath  $filePath
+     * @param FilePath $filePath
+     *
      * @return bool
      */
     public function passesFilters(FilePath $filePath): bool
     {
-        if (! count($this->filters)) {
+        if (!count($this->filters)) {
             return true;
         }
 

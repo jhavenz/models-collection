@@ -2,18 +2,20 @@
 
 namespace Jhavenz\ModelsCollection\Structs\Filesystem;
 
+use BadMethodCallException;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Traits\ForwardsCalls;
 use JsonSerializable;
-use const PHP_INT_MAX;
 use SplFileInfo;
 use Stringable;
-use Symfony\Component\Finder\Comparator as SymfonyComparator;
 use Symfony\Component\Finder\Finder;
 use Symfony\Component\Finder\SplFileInfo as SymfonyFileInfo;
 
 abstract class Path implements Stringable, JsonSerializable
 {
+    use ForwardsCalls;
+
     abstract public function isA(string $class): bool;
 
     abstract protected function validate(): void;
@@ -70,7 +72,7 @@ abstract class Path implements Stringable, JsonSerializable
     #[\ReturnTypeWillChange]
     public function jsonSerialize()
     {
-        return (string) $this;
+        return (string)$this;
     }
 
     protected function makeFinderForPath(string $path, bool $filesOnly = false, bool $directoriesOnly = false): Finder
@@ -89,8 +91,8 @@ abstract class Path implements Stringable, JsonSerializable
             function (Finder $finder) use ($directoriesOnly, $filesOnly) {
                 foreach (
                     [
-                        fn ($f) => $filesOnly && $f->files(),
-                        fn ($f) => $directoriesOnly && $f->directories(),
+                        fn($f) => $filesOnly && $f->files(),
+                        fn($f) => $directoriesOnly && $f->directories(),
                     ] as $configuration
                 ) {
                     $configuration($finder);
@@ -99,42 +101,48 @@ abstract class Path implements Stringable, JsonSerializable
         );
     }
 
+    public function relativePath(): string
+    {
+        return str($this->relativePathname())->beforeLast(DIRECTORY_SEPARATOR)->toString();
+    }
+
+    public function relativePathname(): string
+    {
+        $ds = DIRECTORY_SEPARATOR;
+
+        return collect(explode($ds, $this->path()))
+            ->skipUntil(fn(string $segment) => str_contains($segment, basename(base_path())))
+            ->prepend($ds)
+            ->join($ds);
+    }
+
     public function toClassString(): null|string|Collection
     {
         return null;
     }
 
-    private function getMinMaxDepth(): array
+    public function toFileInfo(): SplFileInfo
     {
-        $minDepth = 0;
-        $maxDepth = PHP_INT_MAX;
+        return new SplFileInfo($this->path());
+    }
 
-        $depths = [];
-        foreach ((array) Repository::depth() as $d) {
-            $depths[] = new SymfonyComparator\NumberComparator($d);
+    public function toSymfonyFileInfo(): SymfonyFileInfo
+    {
+        return new SymfonyFileInfo($this->path(), $this->relativePath(), $this->relativePathname());
+    }
+
+    public function __call(string $method, array $parameters)
+    {
+        try {
+            return $this->forwardCallTo($this->toSymfonyFileInfo(), $method, $parameters);
+        } catch (BadMethodCallException) {
+            throw new BadMethodCallException(
+                sprintf(
+                    'Call to undefined method %s::%s()',
+                    static::class,
+                    $method
+                )
+            );
         }
-
-        /** @var SymfonyComparator\NumberComparator $comparator */
-        foreach ($depths as $comparator) {
-            switch ($comparator->getOperator()) {
-                case '>':
-                    /** @noinspection PhpWrongStringConcatenationInspection */
-                    $minDepth = $comparator->getTarget() + 1;
-                    break;
-                case '>=':
-                    $minDepth = $comparator->getTarget();
-                    break;
-                case '<':
-                    $maxDepth = $comparator->getTarget() - 1;
-                    break;
-                case '<=':
-                    $maxDepth = $comparator->getTarget();
-                    break;
-                default:
-                    $minDepth = $maxDepth = $comparator->getTarget();
-            }
-        }
-
-        return [$minDepth, $maxDepth];
     }
 }
