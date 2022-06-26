@@ -1,38 +1,33 @@
 <?php
-
-/** @noinspection PhpParamsInspection */
-
 /** @noinspection PhpVoidFunctionResultUsedInspection */
 
 use Jhavenz\ModelsCollection\ModelsCollection;
 use Jhavenz\ModelsCollection\Structs\Filesystem\DirectoryPath;
 use Jhavenz\ModelsCollection\Tests\Fixtures\Models;
+
 use function Jhavenz\removeConfiguredDirectories;
 
 it('can have no directories or files given')
     ->expect(function () {
         removeConfiguredDirectories();
 
-        return ModelsCollection::create()->toArray();
+        return ModelsCollection::create();
     })
     ->toHaveCount(0);
 
-it('isnt empty when not explicitly given any models, files, or directories', function () {
-    expect($models = ModelsCollection::create()->toArray())
-        ->toBeArray()
-        ->and($models)
-        ->toHaveCount(5);
-});
+it('isnt empty when not explicitly given any models, files, or directories')
+    ->expect(fn() => ModelsCollection::create()->toArray())
+    ->toBeArray()
+    ->toHaveCount(5);
 
 it('can have models from multiple directories', function () {
     removeConfiguredDirectories();
 
-    config([
-        'models-collection.directories' => [
-            modelsPath(),
-            otherModelsPath(),
-        ],
-    ]);
+    // @formatter:off
+    config(['models-collection.directories' => [
+        modelsPath(),
+        otherModelsPath(),
+    ]]);
 
     $directories = ModelsCollection::create()->toDirectories();
 
@@ -49,11 +44,10 @@ it('can have models from multiple directories', function () {
 });
 
 it('has only has specified models when given 1 directory', function () {
-    config([
-        'models-collection.directories' => [
-            DirectoryPath::from(__DIR__.'/Fixtures/Models/Pivot')->path(),
-        ],
-    ]);
+    // @formatter:off
+    config(['models-collection.directories' => [
+        DirectoryPath::from(__DIR__.'/Fixtures/Models/Pivot')->path(),
+    ]]);
 
     expect(ModelsCollection::create())
         ->toHaveCount(2)
@@ -65,7 +59,7 @@ it('has only has specified models when given 1 directory', function () {
 });
 
 it('can use the higher order collection proxy')
-    ->expect(fn () => schema()->getAllTables())
+    ->expect(fn() => schema()->getAllTables())
     ->toHaveCount(0)
     ->and(function () {
         ModelsCollection::create()->each->runMigrations();
@@ -85,15 +79,15 @@ it('allows a model class-string to be given')
     ->toBeInstanceOf(Models\Post::class);
 
 it('forwards static method calls to an illuminate collection')
-    ->expect(fn () => ModelsCollection::whereInstanceOf(Models\Post::class)->first())
+    ->expect(fn() => ModelsCollection::whereInstanceOf(Models\Post::class)->first())
     ->toBeInstanceOf(Models\Post::class);
 
 it('uses temporarily specified directories, then reverts back to the original configured directories')
-    ->expect(fn () => ModelsCollection::create())
+    ->expect(fn() => ModelsCollection::create())
     ->toHaveCount(5)
-    ->and(fn () => ModelsCollection::withoutConfiguredDirectories(DirectoryPath::from(__DIR__.'/Fixtures/Models/Pivot')))
+    ->and(fn() => ModelsCollection::withoutConfiguredDirectories(DirectoryPath::from(__DIR__.'/Fixtures/Models/Pivot')))
     ->toHaveCount(2)
-    ->and(fn () => ModelsCollection::create())
+    ->and(fn() => ModelsCollection::create())
     ->toHaveCount(5);
 
 // @formatter:off
