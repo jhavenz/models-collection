@@ -1,4 +1,6 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 
 namespace Jhavenz\ModelsCollection\Structs\Filesystem;
 
@@ -12,6 +14,7 @@ use Symfony\Component\Finder\SplFileInfo as SymfonyFileInfo;
 class FilePath extends Path
 {
     private object $instance;
+
     private ReflectionClass $reflectionClass;
 
     public function classString(): string
@@ -47,13 +50,19 @@ class FilePath extends Path
         return $this->instance ??= (new PhpClass($this->path()))->instantiate();
     }
 
-    public function instantiate(): object
+    public function instantiate(): ?object
     {
         try {
             return $this->instance();
         } catch (\Throwable $e) {
-            throw FilePathException::unableToInstantiate($this->path());
+            return InvalidPath::from('');
+            //throw FilePathException::unableToInstantiate($this->path());
         }
+    }
+
+    public function isA(string $class): bool
+    {
+        return is_a($this->classString(), $class, true);
     }
 
     public function reflectionClass(): ReflectionClass

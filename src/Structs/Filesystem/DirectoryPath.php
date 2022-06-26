@@ -5,19 +5,21 @@ namespace Jhavenz\ModelsCollection\Structs\Filesystem;
 use Illuminate\Support\Collection;
 use Jhavenz\ModelsCollection\Exceptions\DirectoryPathException;
 use Jhavenz\ModelsCollection\Exceptions\ModelIteratorException;
+use Jhavenz\ModelsCollection\Structs\Filesystem\Collections\Files;
 use Symfony\Component\Finder\Finder;
 use Symfony\Component\Finder\SplFileInfo as SymfonyFileInfo;
 
 class DirectoryPath extends Path
 {
     protected Finder $finder;
+
     protected Collection $files;
 
     public function __construct(
         string $path,
         private readonly int|string|array $depth = []
     ) {
-       parent::__construct($path);
+        parent::__construct($path);
     }
 
     public static function factory(mixed $path): DirectoryPath
@@ -30,12 +32,22 @@ class DirectoryPath extends Path
     /** @return Collection<FilePath> */
     public function getFiles(): Collection
     {
-        return $this->files ??= collect($this->fileFinder())->map(fn (SymfonyFileInfo $fileInfo) =>
-            FilePath::from($fileInfo->getRealPath())
+        return $this->files ??= collect($this->fileFinder())->map(
+            fn (SymfonyFileInfo $fileInfo) => FilePath::from($fileInfo->getRealPath())
         );
     }
 
-    public function makeFinderForPath(string $path, bool $filesOnly = false, bool $directoriesOnly = false): Finder
+    public function instantiate(): Collection
+    {
+        return Files::make($this->fileFinder())->instantiate();
+    }
+
+    public function isA(string $class): bool
+    {
+        return false;
+    }
+
+    protected function makeFinderForPath(string $path, bool $filesOnly = false, bool $directoriesOnly = false): Finder
     {
         return parent::makeFinderForPath($path, $filesOnly, $directoriesOnly)->depth($this->depth);
     }

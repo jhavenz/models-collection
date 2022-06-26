@@ -27,7 +27,7 @@ eloquentModels()->whereInstanceOf(\App\Models\User::class)->first()
 Example:
 ```php
 # Will only contain these models the next time you call, e.g. models(), eloquentModels(), etc.
-Jhavenz\ModelsCollection\Settings\Repository::only(
+Jhavenz\ModelsCollection\ModelsCollection::only(
     \App\Models\Role::class, 
     \App\Models\Permission::class, 
     \App\Models\Pivot\RoleUser::class,

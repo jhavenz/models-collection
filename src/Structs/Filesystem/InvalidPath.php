@@ -22,17 +22,22 @@ class InvalidPath extends Path
         return null;
     }
 
+    public function isA(string $class): bool
+    {
+        return false;
+    }
+
     public function toClassString(): ?string
     {
         return '';
     }
 
     protected function validate(): void
-	{
-		if (is_file($path = $this->path()) || is_dir($path)) {
+    {
+        if (is_file($path = $this->path()) || is_dir($path)) {
             throw InvalidPathException::existingResourceWasFound($path);
         }
-	}
+    }
 
     public function __toString()
     {

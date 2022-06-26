@@ -1,81 +1,106 @@
-<?php /** @noinspection PhpParamsInspection */
+<?php
+
+/** @noinspection PhpParamsInspection */
 
 /** @noinspection PhpVoidFunctionResultUsedInspection */
 
 use Jhavenz\ModelsCollection\ModelsCollection;
 use Jhavenz\ModelsCollection\Structs\Filesystem\DirectoryPath;
-use Jhavenz\ModelsCollection\Structs\Filesystem\FilePath;
-use Jhavenz\ModelsCollection\Tests\Fixtures\Models\Pivot\RoleUser;
-use Jhavenz\ModelsCollection\Tests\Fixtures\Models\Post;
-use Jhavenz\ModelsCollection\Tests\Fixtures\Models\Role;
-use Jhavenz\ModelsCollection\Tests\Fixtures\Models\User;
+use Jhavenz\ModelsCollection\Tests\Fixtures\Models;
+use function Jhavenz\removeConfiguredDirectories;
 
-it('can have no directories or files given', function () {
-    config(['models-collection.directories' => []]);
+it('can have no directories or files given')
+    ->expect(function () {
+        removeConfiguredDirectories();
 
-    expect(ModelsCollection::create()->toArray())->toHaveCount(0);
-});
+        return ModelsCollection::create()->toArray();
+    })
+    ->toHaveCount(0);
 
 it('isnt empty when not explicitly given any models, files, or directories', function () {
     expect($models = ModelsCollection::create()->toArray())
         ->toBeArray()
         ->and($models)
-        ->toHaveCount(4);
+        ->toHaveCount(5);
+});
+
+it('can have models from multiple directories', function () {
+    removeConfiguredDirectories();
+
+    config([
+        'models-collection.directories' => [
+            modelsPath(),
+            otherModelsPath(),
+        ],
+    ]);
+
+    $directories = ModelsCollection::create()->toDirectories();
+
+    $basePath = __DIR__.DIRECTORY_SEPARATOR.'Fixtures'.DIRECTORY_SEPARATOR;
+
+    expect($directories)->toMatchArray([
+        $basePath.'Models',
+        $basePath.'Models/Pivot',
+        $basePath.'Models/Pivot/NestedModels',
+        $basePath.'OtherModels',
+        $basePath.'OtherModels/Pivot',
+        $basePath.'OtherModels/Pivot/OtherNestedModels',
+    ]);
 });
 
 it('has only has specified models when given 1 directory', function () {
-    config(['models-collection.directories' => [
-        DirectoryPath::from(__DIR__.'/Fixtures/Models/Pivot')->path()
-    ]]);
+    config([
+        'models-collection.directories' => [
+            DirectoryPath::from(__DIR__.'/Fixtures/Models/Pivot')->path(),
+        ],
+    ]);
 
     expect(ModelsCollection::create())
-        ->toHaveCount(1)
+        ->toHaveCount(2)
         ->and(ModelsCollection::create()->toClassString()->values()->toArray())
         ->toMatchArray([
-            RoleUser::class,
+            Models\Pivot\NestedModels\Permission::class,
+            Models\Pivot\RoleUser::class,
         ]);
 });
 
-it('acknowledges depth', function () {
-    expect($models = ModelsCollection::usingDepth('== 0')->values())
-        ->toHaveCount(3)
-        ->and($models->toBase()->map(fn ($model) => $model::class)->sort()->values()->all())
-        ->toMatchArray([
-            Post::class,
-            Role::class,
-            User::class,
-        ]);
-});
+it('can use the higher order collection proxy')
+    ->expect(fn () => schema()->getAllTables())
+    ->toHaveCount(0)
+    ->and(function () {
+        ModelsCollection::create()->each->runMigrations();
 
-it('forwards non-static method calls to the underlying collection, allowing higher order tap', function () {
-    expect(schema()->getAllTables())->toHaveCount(0);
+        return schema()->getAllTables();
+    })
+    ->toHaveCount(5);
 
-    ModelsCollection::create()->each->runMigrations();
+it('allows a model class-string to be given')
+    ->expect(function () {
+        removeConfiguredDirectories();
 
-    expect(schema()->getAllTables())->toHaveCount(4);
-});
+        return ModelsCollection::create([Models\Post::class]);
+    })
+    ->toHaveCount(1)
+    ->first()
+    ->toBeInstanceOf(Models\Post::class);
 
-it('allows a model class-string to be given', function () {
-    removeConfiguredDirectories();
+it('forwards static method calls to an illuminate collection')
+    ->expect(fn () => ModelsCollection::whereInstanceOf(Models\Post::class)->first())
+    ->toBeInstanceOf(Models\Post::class);
 
-    expect(ModelsCollection::create([Post::class])->first())->toBeInstanceOf(Post::class);
-});
+it('uses temporarily specified directories, then reverts back to the original configured directories')
+    ->expect(fn () => ModelsCollection::create())
+    ->toHaveCount(5)
+    ->and(fn () => ModelsCollection::withoutConfiguredDirectories(DirectoryPath::from(__DIR__.'/Fixtures/Models/Pivot')))
+    ->toHaveCount(2)
+    ->and(fn () => ModelsCollection::create())
+    ->toHaveCount(5);
 
-it('forwards static method calls to the underlying collection', function () {
-    expect(ModelsCollection::whereInstanceOf(Post::class)->first())->toBeInstanceOf(Post::class);
-});
-
-it('can have some models when filters are given', function () {
-    $models = ModelsCollection::usingFilters(
-        FilePath::factory(Post::class),
-        FilePath::factory(User::class)
-    );
-
-    dd($models);
-
-    expect($models->toBase())
-        ->toHaveCount(2)
-        ->and($models->map(fn ($model) => $model::class))
-        ->each
-        ->toBeIn([Post::class, User::class]);
-});
+// @formatter:off
+it('uses temporarily specified directories in additional to configured directories, then reverts back to the original configured directories')
+    ->expect(fn () => ModelsCollection::create())
+    ->toHaveCount(5)
+    ->and(fn () => ModelsCollection::withAdditionalDirectories(DirectoryPath::from(__DIR__.'/Fixtures/OtherModels')))
+    ->toHaveCount(8)
+    ->and(fn () => ModelsCollection::create())
+    ->toHaveCount(5);

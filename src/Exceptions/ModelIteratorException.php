@@ -13,13 +13,6 @@ class ModelIteratorException extends RuntimeException
         return SymbolicLinkEncountered::atLocation($path);
     }
 
-	public static function invalidFilter(string $type): static
-    {
-        return new static(
-            "Unknown filter type: [{$type}]. Filters should be a Model class-string or a closure that returns a boolean"
-        );
-	}
-
     public static function invalidFilterReturnType(string $type): static
     {
         return new static(

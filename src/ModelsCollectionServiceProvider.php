@@ -3,7 +3,9 @@
 namespace Jhavenz\ModelsCollection;
 
 use Closure;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Foundation\Application;
+use Illuminate\Support\Arr;
 use Jhavenz\ModelsCollection\Structs\Filesystem\DirectoryPath;
 use Jhavenz\ModelsCollection\Structs\Filesystem\FilePath;
 use Jhavenz\ModelsCollection\Structs\Filesystem\Path;
@@ -15,19 +17,34 @@ class ModelsCollectionServiceProvider extends PackageServiceProvider
     public function configurePackage(Package $package): void
     {
         $package
-            ->name('models-collection')
-            ->hasConfigFile();
+            ->name($name = 'models-collection')
+            ->hasConfigFile($name);
     }
 
     public function registeringPackage()
     {
         $this->app->bind(ModelsCollection::class, function (Application $app, array $params = []) {
+            // @formatter:off
             return new ModelsCollection(
-                data_get($params, 'files', array_filter($flattened = collect($params)->flatten()->all(), fn ($f) => Path::factory($f) instanceof FilePath)),
-                data_get($params, 'directories', array_filter($flattened, fn ($d) => Path::factory($d) instanceof DirectoryPath)),
-                data_get($params, 'filters', array_filter($flattened, fn ($c) => $c instanceof Closure)),
-                data_get($params, 'depth', 0),
+                data_get($params, 'files', fn () => $this->filterParams($params, fn ($value) => ($fp = Path::factory($value)) instanceof FilePath ? $fp : null)),
+                data_get($params, 'directories', $this->filterParams($params, fn ($value) => ($dp = Path::factory($value)) instanceof DirectoryPath ? $dp : null)),
+                data_get($params, 'models', $this->filterParams($params, fn ($value) => $value instanceof Model ? $value : null)),
+                data_get($params, 'filters', $this->filterParams($params, fn ($value) => $value instanceof Closure ? $value : null)),
+                data_get($params, 'depth', []),
             );
         });
+    }
+
+    private function filterParams(array $params, Closure $func): array
+    {
+        $return = [];
+
+        foreach (Arr::flatten($params) as $p) {
+            if (! is_null($r = $func($p))) {
+                $return[] = $r;
+            }
+        }
+
+        return $return;
     }
 }

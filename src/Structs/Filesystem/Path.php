@@ -4,18 +4,18 @@ namespace Jhavenz\ModelsCollection\Structs\Filesystem;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
-use Jhavenz\ModelsCollection\Settings\Repository;
 use JsonSerializable;
+use const PHP_INT_MAX;
 use SplFileInfo;
 use Stringable;
 use Symfony\Component\Finder\Comparator as SymfonyComparator;
 use Symfony\Component\Finder\Finder;
 use Symfony\Component\Finder\SplFileInfo as SymfonyFileInfo;
 
-use const PHP_INT_MAX;
-
 abstract class Path implements Stringable, JsonSerializable
 {
+    abstract public function isA(string $class): bool;
+
     abstract protected function validate(): void;
 
     public function __construct(
@@ -30,9 +30,9 @@ abstract class Path implements Stringable, JsonSerializable
     }
 
     /** @return Finder<SymfonyFileInfo> */
-    public function fileFinder(): Finder
+    public function fileFinder(bool $filesOnly = true, bool $directoriesOnly = false): Finder
     {
-        return $this->finder ??= $this->makeFinderForPath($this->path(), filesOnly: true);
+        return $this->finder ??= $this->makeFinderForPath($this->path(), $filesOnly, $directoriesOnly);
     }
 
     public static function from(mixed $path): static
@@ -42,14 +42,17 @@ abstract class Path implements Stringable, JsonSerializable
 
     public static function factory(mixed $path): Path
     {
-        return match (TRUE) {
+        return match (true) {
             $path instanceof Path => $path,
             $path instanceof Model => FilePath::fromClassString($path::class),
-            $path instanceof SplFileInfo => FilePath::from($path->getRealPath()),
+            $path instanceof SplFileInfo && $path->isFile() => FilePath::from($path->getRealPath()),
+            $path instanceof SplFileInfo && $path->isDir() => DirectoryPath::from($path->getRealPath()),
             is_string($path) && is_file($path) => FilePath::from($path),
             is_string($path) && is_dir($path) => DirectoryPath::from($path),
             is_string($path) && class_exists($path) => FilePath::fromClassString($path),
-            default => InvalidPath::from($path)
+            is_string($path) => InvalidPath::from($path),
+            is_object($path) => InvalidPath::from($path::class),
+            default => InvalidPath::from('')
         };
     }
 
@@ -70,7 +73,7 @@ abstract class Path implements Stringable, JsonSerializable
         return (string) $this;
     }
 
-    public function makeFinderForPath(string $path, bool $filesOnly = false, bool $directoriesOnly = false): Finder
+    protected function makeFinderForPath(string $path, bool $filesOnly = false, bool $directoriesOnly = false): Finder
     {
         if ($filesOnly && is_file($path)) {
             $path = dirname($path);
@@ -79,13 +82,17 @@ abstract class Path implements Stringable, JsonSerializable
         return tap(
             Finder::create()
                 ->in($path)
+                ->ignoreUnreadableDirs()
                 ->ignoreVCS(true)
+                ->ignoreVCSIgnored(true)
                 ->ignoreDotFiles(true),
             function (Finder $finder) use ($directoriesOnly, $filesOnly) {
-                foreach ([
-					fn ($f) => $filesOnly && $f->files(),
-					fn ($f) => $directoriesOnly && $f->directories()
-                ] as $configuration) {
+                foreach (
+                    [
+                        fn ($f) => $filesOnly && $f->files(),
+                        fn ($f) => $directoriesOnly && $f->directories(),
+                    ] as $configuration
+                ) {
                     $configuration($finder);
                 }
             }

@@ -8,12 +8,11 @@ use Spatie\LaravelRay\RayServiceProvider;
 
 class TestCase extends Orchestra
 {
-
     protected function getPackageProviders($app): array
     {
         return [
-			RayServiceProvider::class,
-			ModelsCollectionServiceProvider::class,
+            RayServiceProvider::class,
+            ModelsCollectionServiceProvider::class,
         ];
     }
 
@@ -22,7 +21,7 @@ class TestCase extends Orchestra
         config()->set('database.default', 'testing');
 
         config()->set('models-collection.directories', [
-            __DIR__.'/Fixtures/Models'
+            __DIR__.'/Fixtures/Models',
         ]);
     }
 }

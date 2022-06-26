@@ -2,7 +2,6 @@
 
 namespace Jhavenz;
 
-
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
@@ -22,13 +21,12 @@ if (! function_exists('toIterable')) {
      *
      * @template TValue
      *
-     * @param TValue $value
-     *
+     * @param  TValue  $value
      * @return array<TValue>|TValue
      */
     function toIterable(mixed $value): iterable
     {
-        return match (TRUE) {
+        return match (true) {
             is_iterable($value) => $value,
             default => [$value],
         };
