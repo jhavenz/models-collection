@@ -6,6 +6,8 @@ use Jhavenz\ModelsCollection\Structs\Filesystem\FilePath;
 use Jhavenz\ModelsCollection\Tests\Fixtures\Models\Post;
 use Jhavenz\ModelsCollection\Tests\Fixtures\Models\Role;
 
+use function Jhavenz\modelsCollection;
+
 it('has 1 model when a class-string filter is given')
     ->expect(fn() => ModelsCollection::usingFilters(Post::class))
     ->toHaveCount(1)
@@ -39,7 +41,7 @@ it('has 2 models when 2 FilePath filters are given')
     ]);
 
 it('has all models when no filters are given')
-    ->expect(fn() => ModelsCollection::create()->toBase())
+    ->expect(fn() => modelsCollection())
     ->toHaveCount(5)
     ->each
     ->toBeInstanceOf(Model::class);

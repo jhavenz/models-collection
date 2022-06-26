@@ -13,7 +13,7 @@ use App\Models\User;
 use Jhavenz\ModelsCollection\ModelsCollection;
 
 # works as you'd expect - more examples given below, and in the tests
-eloquentModels()->whereInstanceOf(User::class)->first();
+modelsCollection()->whereInstanceOf(User::class)->first();
 
 # functionally equivalent
 ModelsCollection::usingFilters(User::class)->first(); 
@@ -207,6 +207,18 @@ $belongsToPost = ModelsCollection::usingFilters(function (FilePath $filepath) {
 $belongsToPost->count(); //=> 2
 $belongsToPost->all(); //=> [PostUser {#...}, Post {#...}]
 ```
+
+### IOC Instantiation
+
+This package makes heavy use the Laravel container whenever calling one of the static constructors
+that have been provided: `create` or `make`.
+
+It's highly recommended to use one of these method whenever creating a new `ModelsCollection` instance.
+This allows you to use the built-in power of the IoC container whenever creating a new instance.
+
+> In other words, never use `new ModelsCollection(...)` to create an instance.
+>
+> _Unless, of course, you'd like to create an instance without the container knowing about it._
 
 ## Testing
 

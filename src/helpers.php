@@ -2,12 +2,12 @@
 
 namespace Jhavenz;
 
-use Illuminate\Database\Eloquent\Collection as EloquentCollection;
-use Illuminate\Database\Eloquent\Model;
+use Closure;
 use Illuminate\Support\Collection;
 use Jhavenz\ModelsCollection\ModelsCollection;
+use Jhavenz\ModelsCollection\Structs\Filesystem\FilePath;
 
-if (! function_exists('rescueQuietly')) {
+if (!function_exists('rescueQuietly')) {
     /** no reporting if/when an exception is thrown */
     function rescueQuietly(callable $try, ?callable $catch = null)
     {
@@ -15,13 +15,14 @@ if (! function_exists('rescueQuietly')) {
     }
 }
 
-if (! function_exists('toIterable')) {
+if (!function_exists('toIterable')) {
     /**
      * @noinspection PhpDocSignatureInspection
      *
-     * @template TValue
+     * @template     TValue
      *
-     * @param  TValue  $value
+     * @param TValue $value
+     *
      * @return array<TValue>|TValue
      */
     function toIterable(mixed $value): iterable
@@ -33,23 +34,26 @@ if (! function_exists('toIterable')) {
     }
 }
 
-if (! function_exists('models')) {
-    /** @return Collection<array-key, Model> */
-    function models(): Collection
+if (!function_exists('filteredModelsCollection')) {
+    function filteredModelsCollection(string|Closure|FilePath ...$filters): Collection
     {
-        return ModelsCollection::toBase();
+        return ModelsCollection::usingFilters(...func_get_args())->toBase();
     }
 }
 
-if (! function_exists('eloquentModels')) {
-    /** @return EloquentCollection<array-key, Model> */
-    function eloquentModels(): EloquentCollection
-    {
-        return ModelsCollection::make();
+if (!function_exists('modelsCollection')) {
+    function modelsCollection(
+        ?iterable $files = null,
+        ?iterable $directories = null,
+        ?iterable $models = null,
+        ?iterable $filters = [],
+        int|string|array $depth = []
+    ): Collection {
+        return ModelsCollection::create(...func_get_args())->toBase();
     }
 }
 
-if (! function_exists('removeConfiguredDirectories')) {
+if (!function_exists('removeConfiguredDirectories')) {
     function removeConfiguredDirectories(): void
     {
         config(['models-collection.directories' => []]);
