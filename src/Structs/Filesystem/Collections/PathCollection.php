@@ -42,8 +42,8 @@ abstract class PathCollection extends Collection
     public function instantiate(): Collection
     {
         return $this->flatMap(fn(Path $path) => match ($path::class) {
-            FilePath::class => $path->instantiate(),
-            DirectoryPath::class => $path->instantiate(),
+            FilePath::class => $path->instance(),
+            DirectoryPath::class => $path->getFiles()->map(fn(FilePath $filePath) => $filePath->instance()),
             default => null
         });
     }
