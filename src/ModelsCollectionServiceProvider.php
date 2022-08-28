@@ -27,24 +27,25 @@ class ModelsCollectionServiceProvider extends PackageServiceProvider
             // @formatter:off
             return new ModelsCollection(
                 data_get($params, 'files', fn () => $this->filterParams($params, fn ($value) => ($fp = Path::factory($value)) instanceof FilePath ? $fp : null)),
-                data_get($params, 'directories', $this->filterParams($params, fn ($value) => ($dp = Path::factory($value)) instanceof DirectoryPath ? $dp : null)),
-                data_get($params, 'models', $this->filterParams($params, fn ($value) => $value instanceof Model ? $value : null)),
-                data_get($params, 'filters', $this->filterParams($params, fn ($value) => $value instanceof Closure ? $value : null)),
+                data_get($params, 'directories', fn () => $this->filterParams($params, fn ($value) => ($dp = Path::factory($value)) instanceof DirectoryPath ? $dp : null)),
+                data_get($params, 'models', fn () => $this->filterParams($params, fn ($value) => $value instanceof Model ? $value : null)),
+                data_get($params, 'filters', fn () => $this->filterParams($params, fn ($value) => $value instanceof Closure ? $value : null)),
                 data_get($params, 'depth', []),
             );
         });
     }
 
-    private function filterParams(array $params, Closure $func): array
+    private function filterParams(array $params, Closure $fn): array
     {
-        $return = [];
+        return array_reduce(
+            Arr::flatten($params),
+            function ($carry, $param) use ($fn) {
+                if (! is_null($r = $fn($param))) {
+                    $carry[] = $r;
+                }
 
-        foreach (Arr::flatten($params) as $p) {
-            if (! is_null($r = $func($p))) {
-                $return[] = $r;
-            }
-        }
-
-        return $return;
+                return $carry;
+            },
+        []);
     }
 }

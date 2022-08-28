@@ -18,7 +18,7 @@ class FilePathException extends RuntimeException
     public static function invalidPath(string $path): static
     {
         return new static(
-            "No file found at path: [{$path}]. Try using FilePath::factory() instead?"
+            "No file found at path: [{$path}]. Try using FilePath::factory(), or this class' directory may not be listed in your [models-collection.directories] configuration"
         );
     }
 

@@ -9,7 +9,7 @@ class DirectoryPathException extends RuntimeException
     public static function invalidPath(string $path): static
     {
         return new static(
-            "No directory found at path: [{$path}]. Try using Directory::factory() instead?"
+            "No directory found at path: [{$path}]. Try using Directory::factory() instead, or this directory may not be listed in your [models-collection.directories] configuration"
         );
     }
 

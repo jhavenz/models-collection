@@ -6,6 +6,37 @@ use Closure;
 use Illuminate\Support\Collection;
 use Jhavenz\ModelsCollection\ModelsCollection;
 use Jhavenz\ModelsCollection\Structs\Filesystem\FilePath;
+use Nette\Utils\Html;
+
+if (!function_exists('invokeSafe')) {
+    /**
+     * Function copied from \Nette\Utils\Callback::invokeSafe of the Nette Framework (https://nette.org)
+     * This version allows a callable as the 1st param, vs a requiring a string
+     */
+    function invokeSafe(callable $function, array $args, callable $onError): mixed
+    {
+        $prev = set_error_handler(function ($severity, $message, $file) use ($onError, &$prev, $function): ?bool {
+            if ($file === __FILE__) {
+                $msg = ini_get('html_errors')
+                    ? Html::htmlToText($message)
+                    : $message;
+                $msg = preg_replace("#^$function\\(.*?\\): #", '', $msg);
+                if ($onError($msg, $severity) !== false) {
+                    return null;
+                }
+            }
+
+            return $prev ? $prev(...func_get_args()) : false;
+        });
+
+        try {
+            return $function(...$args);
+        }
+        finally {
+            restore_error_handler();
+        }
+    }
+}
 
 if (!function_exists('rescueQuietly')) {
     /** no reporting if/when an exception is thrown */

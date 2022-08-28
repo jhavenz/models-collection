@@ -44,14 +44,14 @@ class ModelsCollection implements IteratorAggregate, Arrayable, \Countable
         protected int|string|array $depth = []
     ) {
         $this->files = Files::make($files ?? [])
-            ->filter(fn(FilePath $filePath) => is_a($filePath->toClassString(), Model::class, true));
+            ->filter(fn (FilePath $filePath) => is_a($filePath->toClassString(), Model::class, true));
 
         $this->directories = Directories::make([
             ...config('models-collection.directories', []),
             ...collect($directories ?? [])->all(),
         ]);
 
-        $this->models = Collection::make($models ?? [])->filter(fn($item) => $item instanceof Model);
+        $this->models = Collection::make($models ?? [])->filter(fn ($item) => $item instanceof Model);
     }
 
     public function addFilters(string|Closure|FilePath ...$filters): static
@@ -88,13 +88,14 @@ class ModelsCollection implements IteratorAggregate, Arrayable, \Countable
     /** applies logic on dirs, filters, etc. then returns a new instance containing the file paths  */
     public function apply(): static
     {
+        /** @var FilePath $filePath */
         foreach ($this->getIterator() as $filePath) {
             if ($this->hasModel($model = self::toModel($filePath))) {
                 continue;
             }
 
             if (!$this->passesFilters($filePath)) {
-                $this->models = $this->models->filter(fn(Model $m) => $model::class !== $m::class);
+                $this->models = $this->models->filter(fn (Model $m) => $filePath->classString() !== $m::class);
                 continue;
             }
 
@@ -131,16 +132,16 @@ class ModelsCollection implements IteratorAggregate, Arrayable, \Countable
             ->files
             ->merge($this->directories->toFiles($this->depth))
             ->toBase()
-            ->unique(fn(FilePath $fp) => $fp->path())
-            ->filter(fn(FilePath $fp) => rescueQuietly(
-                fn() => $fp->isA(Model::class) && $this->passesFilters($fp),
-                fn() => false
+            ->unique(fn (FilePath $fp) => $fp->path())
+            ->filter(fn (FilePath $fp) => rescueQuietly(
+                fn () => $fp->isA(Model::class) && $this->passesFilters($fp),
+                fn () => false
             ));
     }
 
     public function hasFilePath(mixed $path): bool
     {
-        return $this->files->contains(fn(FilePath $fp) => $fp->path() === Path::factory($path)->path());
+        return $this->files->contains(fn (FilePath $fp) => $fp->path() === Path::factory($path)->path());
     }
 
     public static function make(
@@ -169,14 +170,14 @@ class ModelsCollection implements IteratorAggregate, Arrayable, \Countable
                 config()->set(
                     'models-collection.directories',
                     collect($directories)
-                        ->when($withConfigDirs, fn(Collection $dirs) => $dirs->merge($configuredDirs))
-                        ->map(fn($dir) => DirectoryPath::factory($dir)->path())
+                        ->when($withConfigDirs, fn (Collection $dirs) => $dirs->merge($configuredDirs))
+                        ->map(fn ($dir) => DirectoryPath::factory($dir)->path())
                         ->all()
                 );
 
                 return tap(
                     $func ? $func() : static::create(directories: $directories),
-                    fn() => config(['models-collection.directories' => $configuredDirs])
+                    fn () => config(['models-collection.directories' => $configuredDirs])
                 );
             }
         );
@@ -187,7 +188,7 @@ class ModelsCollection implements IteratorAggregate, Arrayable, \Countable
      *
      * @template TFilter (Closure(TFilePath $filepath): bool)|TFilePath|class-string<Model>
      *
-     * @param TFilter ...$filters
+     * @param  TFilter  ...$filters
      *
      * @return static
      */
@@ -261,8 +262,8 @@ class ModelsCollection implements IteratorAggregate, Arrayable, \Countable
 
                 uasort($items, function ($a, $b) {
                     return strnatcasecmp(
-                        transform(self::toModel($a), fn(Model $model) => class_basename($model), fn() => PHP_INT_MIN),
-                        transform(self::toModel($b), fn(Model $model) => class_basename($model), fn() => PHP_INT_MIN)
+                        transform(self::toModel($a), fn (Model $model) => class_basename($model), fn () => PHP_INT_MIN),
+                        transform(self::toModel($b), fn (Model $model) => class_basename($model), fn () => PHP_INT_MIN)
                     );
                 });
 
@@ -286,8 +287,8 @@ class ModelsCollection implements IteratorAggregate, Arrayable, \Countable
     public function toClassString(bool $sort = true, $sortFlags = SORT_NATURAL): Collection
     {
         return $this
-            ->map(fn($item) => Path::factory($item)->toClassString())
-            ->when($sort, fn($c) => $c->sort($sortFlags))
+            ->map(fn ($item) => Path::factory($item)->toClassString())
+            ->when($sort, fn ($c) => $c->sort($sortFlags))
             ->values();
     }
 
@@ -295,17 +296,17 @@ class ModelsCollection implements IteratorAggregate, Arrayable, \Countable
     {
         return $this
             ->toBase()
-            ->map(fn(Model $model) => DirectoryPath::factory($model::class)->path())
-            ->when($sort, fn($c) => $c->sort($sortFlags))
+            ->map(fn (Model $model) => DirectoryPath::factory($model::class)->path())
+            ->when($sort, fn ($c) => $c->sort($sortFlags))
             ->mapInto(DirectoryPath::class)
-            ->unique(fn(DirectoryPath $dir) => $dir->path())
+            ->unique(fn (DirectoryPath $dir) => $dir->path())
             ->pipeInto(Directories::class);
     }
 
     private static function toModel(mixed $model): ?Model
     {
         return rescueQuietly(
-            fn() => match (true) {
+            fn () => match (true) {
                 $model instanceof Model => $model,
                 ($fp = FilePath::factory($model))->isA(Model::class) => $fp->instance(),
                 default => null
@@ -343,14 +344,14 @@ class ModelsCollection implements IteratorAggregate, Arrayable, \Countable
     }
 
     /**
-     * @param iterable|null $items
+     * @param  iterable|null  $items
      *
      * @return array
      */
     private static function toModels(?iterable $items = []): array
     {
         return ($items ? collect($items) : static::create()->apply())
-            ->map(fn(string|Model|FilePath $item): Model => self::toModel($item))
+            ->map(fn (string|Model|FilePath $item): Model => self::toModel($item))
             ->filter()
             ->all();
     }
@@ -367,7 +368,7 @@ class ModelsCollection implements IteratorAggregate, Arrayable, \Countable
     }
 
     /**
-     * @param FilePath $filePath
+     * @param  FilePath  $filePath
      *
      * @return bool
      */
