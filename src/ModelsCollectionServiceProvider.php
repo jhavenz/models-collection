@@ -6,9 +6,10 @@ use Closure;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Arr;
-use Jhavenz\ModelsCollection\Structs\Filesystem\DirectoryPath;
-use Jhavenz\ModelsCollection\Structs\Filesystem\FilePath;
-use Jhavenz\ModelsCollection\Structs\Filesystem\Path;
+use Illuminate\Support\Collection;
+use Jhavenz\PhpStructs\Filesystem\DirectoryPath;
+use Jhavenz\PhpStructs\Filesystem\FilePath;
+use Jhavenz\PhpStructs\Filesystem\Path;
 use Spatie\LaravelPackageTools\Package;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
 
@@ -24,14 +25,29 @@ class ModelsCollectionServiceProvider extends PackageServiceProvider
     public function registeringPackage()
     {
         $this->app->bind(ModelsCollection::class, function (Application $app, array $params = []) {
-            // @formatter:off
-            return new ModelsCollection(
-                data_get($params, 'files', fn () => $this->filterParams($params, fn ($value) => ($fp = Path::factory($value)) instanceof FilePath ? $fp : null)),
-                data_get($params, 'directories', fn () => $this->filterParams($params, fn ($value) => ($dp = Path::factory($value)) instanceof DirectoryPath ? $dp : null)),
-                data_get($params, 'models', fn () => $this->filterParams($params, fn ($value) => $value instanceof Model ? $value : null)),
-                data_get($params, 'filters', fn () => $this->filterParams($params, fn ($value) => $value instanceof Closure ? $value : null)),
-                data_get($params, 'depth', []),
-            );
+            return collect([
+                'files' => fn () => $this->filterParams(
+                    $params,
+                    fn ($value) => ($fp = Path::factory($value)) instanceof FilePath ? $fp : null
+                ),
+                'directories' => fn () => $this->filterParams(
+                    $params,
+                    fn ($value) => ($dp = Path::factory($value)) instanceof DirectoryPath ? $dp : null
+                ),
+                'models' => fn () => $this->filterParams(
+                    $params,
+                    fn ($value) => $value instanceof Model ? $value : null
+                ),
+                'filters' => fn () => $this->filterParams(
+                    $params,
+                    fn ($value) => $value instanceof Closure ? $value : null
+                ),
+                'depth' => [],
+            ])->map(function ($fallback, $param) use ($params) {
+                return data_get($params, $param, $fallback);
+            })->pipe(function (Collection $params) {
+                return new ModelsCollection(...$params->all());
+            });
         });
     }
 
@@ -40,12 +56,13 @@ class ModelsCollectionServiceProvider extends PackageServiceProvider
         return array_reduce(
             Arr::flatten($params),
             function ($carry, $param) use ($fn) {
-                if (! is_null($r = $fn($param))) {
+                if (!is_null($r = $fn($param))) {
                     $carry[] = $r;
                 }
 
                 return $carry;
             },
-        []);
+            []
+        );
     }
 }

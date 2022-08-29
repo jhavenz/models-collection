@@ -1,17 +1,17 @@
 <?php
 
 use Jhavenz\ModelsCollection\ModelsCollection;
-use Jhavenz\ModelsCollection\Tests\Fixtures\Models;
-use Jhavenz\ModelsCollection\Tests\Fixtures\OtherModels;
+use Jhavenz\PhpStructs\Testing\Fixtures\Eloquent;
+use Jhavenz\PhpStructs\Testing\Fixtures\OtherEloquentModels;
 
 it('can use an exact depth of 0 with 1 directory')
     //top-level folder has 3 models in it
-    ->expect(fn() => ModelsCollection::usingDepth('== 0')->toClassString())
+    ->expect(fn () => ModelsCollection::usingDepth('== 0')->toClassString())
     ->toHaveCount(3)
     ->toMatchArray([
-        Models\Post::class,
-        Models\Role::class,
-        Models\User::class,
+        Eloquent\Post::class,
+        Eloquent\Role::class,
+        Eloquent\User::class,
     ]);
 
 it('can use an exact depth of 0 with 2 directories')
@@ -23,17 +23,17 @@ it('can use an exact depth of 0 with 2 directories')
     })
     ->toHaveCount(4)
     ->toMatchArray([
-        Models\Post::class,
-        Models\Role::class,
-        Models\User::class,
-        OtherModels\Tag::class,
+        Eloquent\Post::class,
+        Eloquent\Role::class,
+        Eloquent\User::class,
+        OtherEloquentModels\Tag::class,
     ]);
 
 it('can use an exact depth of 1 with 1 directory')
-    ->expect(fn() => ModelsCollection::usingDepth(['== 1'])->toClassString())
+    ->expect(fn () => ModelsCollection::usingDepth(['== 1'])->toClassString())
     ->toHaveCount(1)
     ->toMatchArray([
-        Models\Pivot\RoleUser::class,
+        Eloquent\Pivot\RoleUser::class,
     ]);
 
 it('can use an exact depth of 1 with multiple directories')
@@ -44,24 +44,24 @@ it('can use an exact depth of 1 with multiple directories')
     })
     ->toHaveCount(2)
     ->toMatchArray([
-        Models\Pivot\RoleUser::class,
-        OtherModels\Pivot\TagUser::class,
+        Eloquent\Pivot\RoleUser::class,
+        OtherEloquentModels\Pivot\TagUser::class,
     ]);
 
 it('can use depth > 1 with 1 directory')
-    ->expect(fn() => ModelsCollection::usingDepth(['> 1'])->toClassString())
+    ->expect(fn () => ModelsCollection::usingDepth(['> 1'])->toClassString())
     ->toHaveCount(1)
     ->toMatchArray([
-        Models\Pivot\NestedModels\Permission::class,
+        Eloquent\Pivot\NestedModels\Permission::class,
     ]);
 
 it('can use depth > 1 with multiple directories')
-    ->expect(fn() => ModelsCollection::withAdditionalDirectories(
-        fn() => ModelsCollection::usingDepth(['> 1'])->toClassString(),
+    ->expect(fn () => ModelsCollection::withAdditionalDirectories(
+        fn () => ModelsCollection::usingDepth(['> 1'])->toClassString(),
         otherModelsPath()
     ))
     ->toHaveCount(2)
     ->toMatchArray([
-        Models\Pivot\NestedModels\Permission::class,
-        OtherModels\Pivot\OtherNestedModels\Thread::class,
+        Eloquent\Pivot\NestedModels\Permission::class,
+        OtherEloquentModels\Pivot\OtherNestedModels\Thread::class,
     ]);

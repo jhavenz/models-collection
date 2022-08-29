@@ -2,8 +2,8 @@
 
 use Illuminate\Database\Schema\Builder;
 use Illuminate\Support\Facades\Schema;
-use Jhavenz\ModelsCollection\Structs\Filesystem\DirectoryPath;
 use Jhavenz\ModelsCollection\Tests\TestCase;
+use Jhavenz\PhpStructs\Filesystem\DirectoryPath;
 
 uses(TestCase::class)->in(__DIR__);
 

@@ -1,11 +1,12 @@
 <?php
 
-namespace Jhavenz;
+namespace Jhavenz\ModelsCollection;
 
 use Closure;
 use Illuminate\Support\Collection;
-use Jhavenz\ModelsCollection\ModelsCollection;
-use Jhavenz\ModelsCollection\Structs\Filesystem\FilePath;
+use Illuminate\Support\Str;
+use Illuminate\Support\Stringable;
+use Jhavenz\PhpStructs\Filesystem\FilePath;
 use Nette\Utils\Html;
 
 if (!function_exists('invokeSafe')) {
@@ -52,7 +53,7 @@ if (!function_exists('toIterable')) {
      *
      * @template     TValue
      *
-     * @param TValue $value
+     * @param  TValue  $value
      *
      * @return array<TValue>|TValue
      */
@@ -88,5 +89,33 @@ if (!function_exists('removeConfiguredDirectories')) {
     function removeConfiguredDirectories(): void
     {
         config(['models-collection.directories' => []]);
+    }
+}
+
+if (!function_exists('srcPath')) {
+    function srcPath(?string $path = null): string
+    {
+        return str($path ?? '')
+            ->whenNotEmpty(
+                fn (Stringable $str) => $str->wrap(DIRECTORY_SEPARATOR),
+                fn (Stringable $str) => $str->prepend(DIRECTORY_SEPARATOR)
+            )
+            ->prepend(__DIR__)
+            ->rtrim(DIRECTORY_SEPARATOR)
+            ->toString();
+    }
+}
+
+if (!function_exists('basePath')) {
+    function basePath(?string $path = null): string
+    {
+        return str($path ?? '')
+            ->whenNotEmpty(
+                fn (Stringable $str) => $str->wrap(DIRECTORY_SEPARATOR),
+                fn (Stringable $str) => $str->prepend(DIRECTORY_SEPARATOR)
+            )
+            ->prepend(Str::beforeLast(srcPath(), DIRECTORY_SEPARATOR.'src'))
+            ->rtrim(DIRECTORY_SEPARATOR)
+            ->toString();
     }
 }

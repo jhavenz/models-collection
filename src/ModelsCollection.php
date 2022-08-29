@@ -13,15 +13,15 @@ use Illuminate\Support\Traits\Conditionable;
 use Illuminate\Support\Traits\ForwardsCalls;
 use IteratorAggregate;
 use Jhavenz\ModelsCollection\Exceptions\ModelCollectionException;
-use Jhavenz\ModelsCollection\Structs\Filesystem\Collections\Directories;
-use Jhavenz\ModelsCollection\Structs\Filesystem\Collections\Files;
-use Jhavenz\ModelsCollection\Structs\Filesystem\DirectoryPath;
-use Jhavenz\ModelsCollection\Structs\Filesystem\FilePath;
-use Jhavenz\ModelsCollection\Structs\Filesystem\Path;
+use Jhavenz\PhpStructs\Filesystem\Collections\Directories;
+use Jhavenz\PhpStructs\Filesystem\Collections\Files;
+use Jhavenz\PhpStructs\Filesystem\DirectoryPath;
+use Jhavenz\PhpStructs\Filesystem\FilePath;
+use Jhavenz\PhpStructs\Filesystem\Path;
 use OutOfBoundsException;
 
 use function collect;
-use function Jhavenz\rescueQuietly;
+use function Jhavenz\ModelsCollection\rescueQuietly;
 
 /**
  * @implements Enumerable
@@ -90,6 +90,7 @@ class ModelsCollection implements IteratorAggregate, Arrayable, \Countable
     {
         /** @var FilePath $filePath */
         foreach ($this->getIterator() as $filePath) {
+            dd(compact('filePath'));
             if ($this->hasModel($model = self::toModel($filePath))) {
                 continue;
             }
@@ -136,7 +137,8 @@ class ModelsCollection implements IteratorAggregate, Arrayable, \Countable
             ->filter(fn (FilePath $fp) => rescueQuietly(
                 fn () => $fp->isA(Model::class) && $this->passesFilters($fp),
                 fn () => false
-            ));
+            ))
+            ->dd(__METHOD__);
     }
 
     public function hasFilePath(mixed $path): bool

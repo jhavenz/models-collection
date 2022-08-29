@@ -2,10 +2,10 @@
 /** @noinspection PhpVoidFunctionResultUsedInspection */
 
 use Jhavenz\ModelsCollection\ModelsCollection;
-use Jhavenz\ModelsCollection\Structs\Filesystem\DirectoryPath;
-use Jhavenz\ModelsCollection\Tests\Fixtures\Models;
+use Jhavenz\PhpStructs\Filesystem\DirectoryPath;
+use Jhavenz\PhpStructs\Testing\Fixtures\Eloquent;
 
-use function Jhavenz\removeConfiguredDirectories;
+use function Jhavenz\ModelsCollection\removeConfiguredDirectories;
 
 it('can have no directories or files given')
     ->expect(function () {
@@ -16,11 +16,26 @@ it('can have no directories or files given')
     ->toHaveCount(0);
 
 it('isnt empty when not explicitly given any models, files, or directories')
-    ->expect(fn() => ModelsCollection::create()->toArray())
+    ->expect(fn () => ModelsCollection::create()->toArray())
     ->toBeArray()
     ->toHaveCount(5);
 
 it('can have models from multiple directories', function () {
+    $path = $this->getModelFixturesPath('Pivot/NestedModels/Permission.php');
+    $ns = \Jhavenz\PhpStructs\Filesystem\FilePath::from($path)->instance();
+    dd('done', $ns);
+    $phpClass = new \PhpClass\PhpClass($path);
+    dd($phpClass);
+    $cl = $phpClass->namespace();
+
+    dd($cl, $phpClass->classname());
+    $cl = ($phpClass)->instantiate();
+    dd($cl);
+    $rfx = new PHPStan\BetterReflection\Reflection\ReflectionClass($path);
+    dd($dir);
+    $c = app('files')->getRequire($path);
+    dd($c);
+    dd(new ReflectionClass($path));
     removeConfiguredDirectories();
 
     // @formatter:off
@@ -53,8 +68,8 @@ it('has only has specified models when given 1 directory', function () {
         ->toHaveCount(2)
         ->and(ModelsCollection::create()->toClassString()->values()->toArray())
         ->toMatchArray([
-            Models\Pivot\NestedModels\Permission::class,
-            Models\Pivot\RoleUser::class,
+            Eloquent\Pivot\NestedModels\Permission::class,
+            Eloquent\Pivot\RoleUser::class,
         ]);
 });
 
@@ -62,7 +77,7 @@ it('can use the higher order collection proxy')
     ->expect(fn() => schema()->getAllTables())
     ->toHaveCount(0)
     ->and(function () {
-        ModelsCollection::create()->each->runMigrations();
+        ModelsCollection::create()->each(fn (Eloquent\IHasMigration $model) => $model->runMigration());
 
         return schema()->getAllTables();
     })
@@ -72,15 +87,15 @@ it('allows a model class-string to be given')
     ->expect(function () {
         removeConfiguredDirectories();
 
-        return ModelsCollection::create([Models\Post::class]);
+        return ModelsCollection::create([Eloquent\Post::class]);
     })
     ->toHaveCount(1)
     ->first()
-    ->toBeInstanceOf(Models\Post::class);
+    ->toBeInstanceOf(Eloquent\Post::class);
 
 it('forwards static method calls to an illuminate collection')
-    ->expect(fn() => ModelsCollection::whereInstanceOf(Models\Post::class)->first())
-    ->toBeInstanceOf(Models\Post::class);
+    ->expect(fn() => ModelsCollection::whereInstanceOf(Eloquent\Post::class)->first())
+    ->toBeInstanceOf(Eloquent\Post::class);
 
 it('uses temporarily specified directories, then reverts back to the original configured directories')
     ->expect(fn() => ModelsCollection::create())

@@ -17,12 +17,19 @@
             "role": "Developer"
         }
     ],
+    "repositories": [
+        {
+            "type": "path",
+            "url": "~/Packages/php-structs"
+        }
+    ],
     "require": {
         "php": "^8.1",
         "illuminate/collections": "^9.0",
         "illuminate/contracts": "^9.0",
         "innmind/filesystem": "^5.1",
-        "innmind/immutable": "^4.2",
+        "innmind/immutable": "^4.0",
+        "jhavenz/php-structs": "dev-main",
         "nette/utils": "^3.2",
         "pyrsmk/php-class": "^1.0",
         "spatie/laravel-package-tools": "^1.9.2"
