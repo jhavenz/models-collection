@@ -27,16 +27,20 @@ class TestCase extends Orchestra
             $this->getOtherModelFixturesPath(),
         ]);
 
-        spl_autoload_register(function () {
-            $files = Finder::create()->in(config('models-collection.directories'))->ignoreDotFiles(true)->files();
+        $app->booted(function () use ($app) {
+            $dir = $app['config']->get('models-collection.directories');
 
-            foreach ($files as $file) {
-                try {
-                    require_once $file->getRealPath();
-                } catch (\Throwable $e) {
-                    continue;
+            spl_autoload_register(function () use ($dir) {
+                $files = Finder::create()->in($dir)->ignoreDotFiles(true)->files();
+
+                foreach ($files as $file) {
+                    try {
+                        require_once $file->getRealPath();
+                    } catch (\Throwable $e) {
+                        continue;
+                    }
                 }
-            }
+            });
         });
     }
 

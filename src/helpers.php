@@ -96,6 +96,7 @@ if (!function_exists('srcPath')) {
     function srcPath(?string $path = null): string
     {
         return str($path ?? '')
+            ->trim(DIRECTORY_SEPARATOR)
             ->whenNotEmpty(
                 fn (Stringable $str) => $str->wrap(DIRECTORY_SEPARATOR),
                 fn (Stringable $str) => $str->prepend(DIRECTORY_SEPARATOR)
@@ -110,6 +111,7 @@ if (!function_exists('basePath')) {
     function basePath(?string $path = null): string
     {
         return str($path ?? '')
+            ->trim(DIRECTORY_SEPARATOR)
             ->whenNotEmpty(
                 fn (Stringable $str) => $str->wrap(DIRECTORY_SEPARATOR),
                 fn (Stringable $str) => $str->prepend(DIRECTORY_SEPARATOR)
