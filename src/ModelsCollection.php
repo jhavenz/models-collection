@@ -12,9 +12,10 @@ use Illuminate\Support\Traits\Conditionable;
 use Illuminate\Support\Traits\ForwardsCalls;
 use IteratorAggregate;
 use Jhavenz\ModelsCollection\Exceptions\ModelCollectionException;
-use Jhavenz\PhpStructs\Filesystem\Collections\Directories;
-use Jhavenz\PhpStructs\Filesystem\Collections\Files;
+use Jhavenz\PhpStructs\Filesystem\Local\Collections\Directories;
+use Jhavenz\PhpStructs\Filesystem\Local\Collections\Files;
 use Jhavenz\PhpStructs\Filesystem\Path;
+use Jhavenz\PhpStructs\Filesystem\Shared\DirectoryPath;
 use Jhavenz\PhpStructs\Filesystem\Shared\FilePath;
 use OutOfBoundsException;
 
@@ -66,10 +67,10 @@ class ModelsCollection implements IteratorAggregate, Arrayable, \Countable
                     return $filter;
                 }
 
-                $filter = Path::factory($filter);
+                $filter = Path::from($filter);
 
                 return function (FilePath $filePath) use ($filter) {
-                    return $filter instanceof FilePath && $filePath->isA($filter->classString());
+                    return $filter instanceof FilePath && $filePath->isA($filter->toClassString());
                 };
             }, $filters),
         ];
@@ -125,10 +126,14 @@ class ModelsCollection implements IteratorAggregate, Arrayable, \Countable
     /** @return Collection<FilePath> */
     private function getFiles(): Collection
     {
-        return $this
-            ->files
-            ->merge($this->directories->toFiles($this->depth))
-            ->toBase()
+        $data = collect(
+            $this
+                ->files
+                ->merge($this->directories->toFiles($this->depth))
+                ->map(fn (Path $path) => $path)
+        );
+
+        return $data
             ->unique(fn (FilePath $fp) => $fp->path())
             ->filter(fn (FilePath $fp) => rescueQuietly(
                 fn () => $fp->isA(Model::class) && $this->passesFilters($fp),
@@ -139,7 +144,9 @@ class ModelsCollection implements IteratorAggregate, Arrayable, \Countable
 
     public function hasFilePath(mixed $path): bool
     {
-        return $this->files->contains(fn (FilePath $fp) => $fp->path() === Path::factory($path)->path());
+        return $this->files->contains(
+            fn (FilePath $fp) => $fp->path() === Path::from($path)->path()
+        );
     }
 
     public static function make(
@@ -169,7 +176,7 @@ class ModelsCollection implements IteratorAggregate, Arrayable, \Countable
                     'models-collection.directories',
                     collect($directories)
                         ->when($withConfigDirs, fn (Collection $dirs) => $dirs->merge($configuredDirs))
-                        ->map(fn ($dir) => DirectoryPath::factory($dir)->path())
+                        ->map(fn ($dir) => DirectoryPath::from($dir)->path())
                         ->all()
                 );
 
@@ -194,7 +201,7 @@ class ModelsCollection implements IteratorAggregate, Arrayable, \Countable
     {
         $models = [];
         foreach ($filters as $filter) {
-            if (is_callable($filter) || !($fp = FilePath::factory($filter))->isA(Model::class)) {
+            if (is_callable($filter) || !($fp = FilePath::from($filter))->isA(Model::class)) {
                 continue;
             }
 
@@ -281,11 +288,10 @@ class ModelsCollection implements IteratorAggregate, Arrayable, \Countable
         return collect($this->toArray());
     }
 
-    /** @return Collection<array-key, class-string<Model>> */
     public function toClassString(bool $sort = true, $sortFlags = SORT_NATURAL): Collection
     {
         return $this
-            ->map(fn ($item) => Path::factory($item)->toClassString())
+            ->map(fn ($item) => Path::from($item)->toClassString())
             ->when($sort, fn ($c) => $c->sort($sortFlags))
             ->values();
     }
@@ -294,7 +300,7 @@ class ModelsCollection implements IteratorAggregate, Arrayable, \Countable
     {
         return $this
             ->toBase()
-            ->map(fn (Model $model) => DirectoryPath::factory($model::class)->path())
+            ->map(fn (Model $model) => DirectoryPath::from($model::class)->path())
             ->when($sort, fn ($c) => $c->sort($sortFlags))
             ->mapInto(DirectoryPath::class)
             ->unique(fn (DirectoryPath $dir) => $dir->path())
@@ -306,7 +312,7 @@ class ModelsCollection implements IteratorAggregate, Arrayable, \Countable
         return rescueQuietly(
             fn () => match (true) {
                 $model instanceof Model => $model,
-                ($fp = FilePath::factory($model))->isA(Model::class) => $fp->instance(),
+                ($fp = FilePath::from($model))->isA(Model::class) => $fp->instance(),
                 default => null
             }
         );
