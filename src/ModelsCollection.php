@@ -8,20 +8,17 @@ use Exception;
 use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Enumerable;
 use Illuminate\Support\Traits\Conditionable;
 use Illuminate\Support\Traits\ForwardsCalls;
 use IteratorAggregate;
 use Jhavenz\ModelsCollection\Exceptions\ModelCollectionException;
 use Jhavenz\PhpStructs\Filesystem\Collections\Directories;
 use Jhavenz\PhpStructs\Filesystem\Collections\Files;
-use Jhavenz\PhpStructs\Filesystem\DirectoryPath;
-use Jhavenz\PhpStructs\Filesystem\FilePath;
 use Jhavenz\PhpStructs\Filesystem\Path;
+use Jhavenz\PhpStructs\Filesystem\Shared\FilePath;
 use OutOfBoundsException;
 
 use function collect;
-use function Jhavenz\ModelsCollection\rescueQuietly;
 
 /**
  * @implements Enumerable
@@ -90,7 +87,6 @@ class ModelsCollection implements IteratorAggregate, Arrayable, \Countable
     {
         /** @var FilePath $filePath */
         foreach ($this->getIterator() as $filePath) {
-            dd(compact('filePath'));
             if ($this->hasModel($model = self::toModel($filePath))) {
                 continue;
             }

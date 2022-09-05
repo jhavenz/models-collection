@@ -6,7 +6,6 @@ use Jhavenz\ModelsCollection\ModelsCollectionServiceProvider;
 use Jhavenz\PhpStructs;
 use Orchestra\Testbench\TestCase as Orchestra;
 use Spatie\LaravelRay\RayServiceProvider;
-use Symfony\Component\Finder\Finder;
 
 class TestCase extends Orchestra
 {
@@ -28,19 +27,19 @@ class TestCase extends Orchestra
         ]);
 
         $app->booted(function () use ($app) {
-            $dir = $app['config']->get('models-collection.directories');
+            //$dir = $app['config']->get('models-collection.directories');
 
-            spl_autoload_register(function () use ($dir) {
-                $files = Finder::create()->in($dir)->ignoreDotFiles(true)->files();
-
-                foreach ($files as $file) {
-                    try {
-                        require_once $file->getRealPath();
-                    } catch (\Throwable $e) {
-                        continue;
-                    }
-                }
-            });
+            //spl_autoload_register(function () use ($dir) {
+            //    $files = Finder::create()->in($dir)->ignoreDotFiles(true)->files();
+            //
+            //    foreach ($files as $file) {
+            //        try {
+            //            require_once $file->getRealPath();
+            //        } catch (\Throwable $e) {
+            //            continue;
+            //        }
+            //    }
+            //});
         });
     }
 

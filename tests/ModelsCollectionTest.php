@@ -22,21 +22,6 @@ it('isnt empty when not explicitly given any models, files, or directories')
 
 it('can have models from multiple directories', function () {
     $path = $this->getModelFixturesPath('Pivot/NestedModels/Permission.php');
-    $ns = \Jhavenz\PhpStructs\Filesystem\FilePath::from($path)->instance();
-    dd('done', $ns);
-    $phpClass = new \PhpClass\PhpClass($path);
-    dd($phpClass);
-    $cl = $phpClass->namespace();
-
-    dd($cl, $phpClass->classname());
-    $cl = ($phpClass)->instantiate();
-    dd($cl);
-    $rfx = new PHPStan\BetterReflection\Reflection\ReflectionClass($path);
-    dd($dir);
-    $c = app('files')->getRequire($path);
-    dd($c);
-    dd(new ReflectionClass($path));
-    removeConfiguredDirectories();
 
     // @formatter:off
     config(['models-collection.directories' => [
